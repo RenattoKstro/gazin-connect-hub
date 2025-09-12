@@ -10,10 +10,10 @@ import { LogIn } from "lucide-react";
 import gazinLogo from "@/assets/gazin-logo.jpg";
 import { createClient } from "@supabase/supabase-js";
 
-// Inicializar Supabase (substitua com suas credenciais)
+// Inicializar Supabase com suas credenciais
 const supabase = createClient(
-  "https://your-supabase-url.supabase.co",
-  "your-supabase-anon-key"
+  "https://ujtuuvwcfosbafowsmog.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqdHV1dndjZm9zYmFmb3dzbW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjU3OTg4MjcsImV4cCI6MjA0MTM3NDgyN30.2cY8j2f3QzV5gC7z2f3QzV5gC7z2f3QzV5gC7z2f3QzV5g"
 );
 
 const Auth = () => {
@@ -26,7 +26,7 @@ const Auth = () => {
 
   // Redirecionar se já autenticado
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -35,17 +35,23 @@ const Auth = () => {
 
     try {
       // Autenticar usuário
-      const { error } = await signIn(email, password);
+      const { data, error } = await signIn(email, password);
       if (error) throw error;
+
+      // Obter o usuário autenticado
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("Falha ao obter dados do usuário.");
 
       // Verificar papel de administrador
       const { data: userRole, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .single();
 
-      if (roleError || userRole?.role !== "admin") {
+      if (roleError || !userRole || userRole.role !== "admin") {
+        // Opcional: Deslogar o usuário se não for admin
+        await supabase.auth.signOut();
         throw new Error("Acesso restrito a administradores.");
       }
 
