@@ -1,42 +1,92 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CollaboratorCard, Collaborator } from "@/components/CollaboratorCard";
 import { SearchBar } from "@/components/SearchBar";
-import { mockCollaborators } from "@/data/mockCollaborators";
-import { Users, Building2 } from "lucide-react";
-import gazinLogo from "@/assets/gazin-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Users, Building2, Settings, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import gazinLogo from "@/assets/gazin-logo.jpg";
 
 const Index = () => {
+  const { user, isAdmin, signOut } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCollaborators();
+  }, []);
+
+  const fetchCollaborators = async () => {
+    const { data, error } = await supabase
+      .from('collaborators')
+      .select('*')
+      .order('name');
+
+    if (!error && data) {
+      setCollaborators(data);
+    }
+    setIsLoading(false);
+  };
 
   const filteredCollaborators = useMemo(() => {
-    if (!searchTerm) return mockCollaborators;
+    if (!searchTerm) return collaborators;
     
     const term = searchTerm.toLowerCase();
-    return mockCollaborators.filter(collaborator =>
+    return collaborators.filter(collaborator =>
       collaborator.name.toLowerCase().includes(term) ||
       collaborator.position.toLowerCase().includes(term)
     );
-  }, [searchTerm]);
+  }, [searchTerm, collaborators]);
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
       <header className="bg-card shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <img 
-              src={gazinLogo} 
-              alt="Gazin Logo" 
-              className="w-12 h-12 rounded-full shadow-md"
-            />
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-primary mb-1">
-                Gazin Assis Brasil
-              </h1>
-              <p className="text-muted-foreground flex items-center justify-center gap-2">
-                <Building2 className="w-4 h-4" />
-                Diretório de Colaboradores
-              </p>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <img 
+                src={gazinLogo} 
+                alt="Gazin Logo" 
+                className="w-12 h-auto rounded-lg shadow-md"
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-primary mb-1">
+                  Gazin Assis Brasil
+                </h1>
+                <p className="text-muted-foreground flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Diretório de Colaboradores
+                </p>
+              </div>
+            </div>
+            
+            {/* Auth Actions */}
+            <div className="flex items-center gap-2">
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/admin">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Admin
+                      </Link>
+                    </Button>
+                  )}
+                  <Button onClick={signOut} variant="ghost" size="sm">
+                    Sair
+                  </Button>
+                </>
+              ) : (
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Login
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -63,7 +113,12 @@ const Index = () => {
         </div>
 
         {/* Collaborators Grid */}
-        {filteredCollaborators.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Carregando colaboradores...</p>
+          </div>
+        ) : filteredCollaborators.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCollaborators.map((collaborator) => (
               <CollaboratorCard

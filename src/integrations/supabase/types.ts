@@ -14,13 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          instagram: string | null
+          name: string
+          observations: string | null
+          phone: string | null
+          photo_url: string | null
+          position: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instagram?: string | null
+          name: string
+          observations?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          position: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instagram?: string | null
+          name?: string
+          observations?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          position?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

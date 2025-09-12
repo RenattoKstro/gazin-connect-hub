@@ -7,10 +7,10 @@ export interface Collaborator {
   id: string;
   name: string;
   position: string;
-  phone: string;
-  photo?: string;
-  instagram?: string;
-  observations?: string;
+  phone: string | null;
+  photo_url: string | null;
+  instagram: string | null;
+  observations: string | null;
 }
 
 interface CollaboratorCardProps {
@@ -19,6 +19,7 @@ interface CollaboratorCardProps {
 
 export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
   const handleWhatsAppClick = () => {
+    if (!collaborator.phone) return;
     const phoneNumber = collaborator.phone.replace(/\D/g, '');
     const message = `Olá ${collaborator.name}!`;
     const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodeURIComponent(message)}`;
@@ -48,7 +49,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <Avatar className="w-16 h-16 border-2 border-primary/20">
-            <AvatarImage src={collaborator.photo} alt={collaborator.name} />
+            <AvatarImage src={collaborator.photo_url || undefined} alt={collaborator.name} />
             <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold text-lg">
               {getInitials(collaborator.name)}
             </AvatarFallback>
@@ -62,10 +63,12 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
               {collaborator.position}
             </p>
             
-            <div className="flex items-center text-muted-foreground mb-4">
-              <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
-              <span className="text-sm">{collaborator.phone}</span>
-            </div>
+            {collaborator.phone && (
+              <div className="flex items-center text-muted-foreground mb-4">
+                <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="text-sm">{collaborator.phone}</span>
+              </div>
+            )}
 
             {collaborator.observations && (
               <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
@@ -74,15 +77,17 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
             )}
 
             <div className="flex gap-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleWhatsAppClick}
-                className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                WhatsApp
-              </Button>
+              {collaborator.phone && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleWhatsAppClick}
+                  className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </Button>
+              )}
 
               {collaborator.instagram && (
                 <Button
