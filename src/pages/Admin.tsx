@@ -1,9 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  "https://ujtuuvwcfosbafowsmog.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqdHV1dndjZm9zYmFmb3dzbW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3MTE0MzQsImV4cCI6MjA3MzI4NzQzNH0.X5zO3dgWVEIx4IiiuMlUQHPhWeNFF67IiLOn2mnlQq0" );
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthContext = createContext({
   user: null,
@@ -22,7 +18,6 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
 
       if (user) {
-        // Verificar se o usuário é administrador
         const { data: userRole, error } = await supabase
           .from("user_roles")
           .select("role")
@@ -52,7 +47,6 @@ export const AuthProvider = ({ children }) => {
     });
     if (!error && data.user) {
       setUser(data.user);
-      // Verificar se o usuário é administrador
       const { data: userRole, error: roleError } = await supabase
         .from("user_roles")
         .select("role")
