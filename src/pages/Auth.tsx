@@ -7,7 +7,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { LogIn } from "lucide-react";
-import gazinLogo from "@/assets/gazin-logo.jpg";
+import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Auth = () => {
   const { signIn, user } = useAuth();

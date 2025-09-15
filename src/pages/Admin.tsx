@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Upload, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import gazinLogo from "@/assets/gazin-logo.jpg";
+import gazinLogo from "@/assets/gazin-logo-new.png";
 
 interface Collaborator {
   id: string;

@@ -3,10 +3,10 @@ import { CollaboratorCard, Collaborator } from "@/components/CollaboratorCard";
 import { SearchBar } from "@/components/SearchBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, Building2, Settings, LogIn } from "lucide-react";
+import { Users, Building2, Settings, LogIn, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import gazinLogo from "@/assets/gazin-logo.jpg";
+import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Index = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -30,14 +30,26 @@ const Index = () => {
     setIsLoading(false);
   };
 
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, ''); // Remove accents
+  };
+
   const filteredCollaborators = useMemo(() => {
     if (!searchTerm) return collaborators;
     
-    const term = searchTerm.toLowerCase();
-    return collaborators.filter(collaborator =>
-      collaborator.name.toLowerCase().includes(term) ||
-      collaborator.position.toLowerCase().includes(term)
-    );
+    const normalizedTerm = normalizeText(searchTerm);
+    return collaborators.filter(collaborator => {
+      const normalizedName = normalizeText(collaborator.name);
+      const normalizedPosition = normalizeText(collaborator.position);
+      const normalizedObservations = normalizeText(collaborator.observations || '');
+      
+      return normalizedName.includes(normalizedTerm) ||
+             normalizedPosition.includes(normalizedTerm) ||
+             normalizedObservations.includes(normalizedTerm);
+    });
   }, [searchTerm, collaborators]);
 
   return (
@@ -50,7 +62,7 @@ const Index = () => {
               <img 
                 src={gazinLogo} 
                 alt="Gazin Logo" 
-                className="w-24 h-auto rounded-lg shadow-md"
+                className="w-40 h-auto rounded-lg shadow-md"
               />
               <div className="text-center">
                 <h1 className="text-3xl font-bold text-primary mb-1">
@@ -94,7 +106,7 @@ const Index = () => {
           <SearchBar
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="Buscar por nome ou cargo..."
+            placeholder="Buscar por nome, cargo ou observações..."
           />
         </div>
       </header>
@@ -143,9 +155,23 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="mt-16 text-center py-8 border-t border-border/40">
-          <p className="text-muted-foreground text-sm">
-            © 2024 Gazin Assis Brasil - Todos os direitos reservados
-          </p>
+          <div className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              © 2025 Gazin Assis Brasil - AC - Todos os direitos reservados.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-muted-foreground">Desenvolvido por: Renato Almeida</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-1 text-muted-foreground hover:text-primary"
+                onClick={() => window.open('https://instagram.com/renato_alme1da', '_blank')}
+              >
+                <Instagram className="w-4 h-4 mr-1" />
+                @renato_alme1da
+              </Button>
+            </div>
+          </div>
         </footer>
       </main>
     </div>
