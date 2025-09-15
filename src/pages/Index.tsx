@@ -56,34 +56,34 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-subtle">
       {/* Header */}
       <header className="bg-card shadow-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex flex-col items-center gap-4 flex-1">
+        <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+            <div className="flex flex-col items-center gap-2 sm:gap-4 flex-1">
               <img 
                 src={gazinLogo} 
                 alt="Gazin Logo" 
-                className="w-40 h-auto rounded-lg shadow-md"
+                className="w-32 sm:w-40 md:w-48 h-auto rounded-lg shadow-md"
               />
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-primary mb-1">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                   Gazin Assis Brasil
                 </h1>
-                <p className="text-muted-foreground flex items-center gap-2 justify-center">
-                  <Building2 className="w-4 h-4" />
+                <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2 justify-center">
+                  <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   Diretório de Colaboradores
                 </p>
               </div>
             </div>
             
             {/* Auth Actions */}
-            <div className="flex items-center gap-2 self-start">
+            <div className="flex items-center gap-2 justify-center sm:self-start">
               {user ? (
                 <>
                   {isAdmin && (
                     <Button asChild variant="outline" size="sm">
                       <Link to="/admin">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Admin
+                        <Settings className="w-4 h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Admin</span>
                       </Link>
                     </Button>
                   )}
@@ -94,8 +94,8 @@ const Index = () => {
               ) : (
                 <Button asChild variant="outline" size="sm">
                   <Link to="/auth">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Login
+                    <LogIn className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Login</span>
                   </Link>
                 </Button>
               )}
@@ -112,12 +112,12 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Stats */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-card px-4 py-2 rounded-lg shadow-sm border border-border/40">
-            <Users className="w-5 h-5 text-primary" />
-            <span className="text-sm text-muted-foreground">
+        <div className="mb-6 sm:mb-8 text-center">
+          <div className="inline-flex items-center gap-2 bg-card px-3 sm:px-4 py-2 rounded-lg shadow-sm border border-border/40">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <span className="text-xs sm:text-sm text-muted-foreground">
               {filteredCollaborators.length} colaborador{filteredCollaborators.length !== 1 ? 'es' : ''} 
               {searchTerm && ` encontrado${filteredCollaborators.length !== 1 ? 's' : ''}`}
             </span>
@@ -126,12 +126,12 @@ const Index = () => {
 
         {/* Collaborators Grid */}
         {isLoading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando colaboradores...</p>
+          <div className="text-center py-8 sm:py-16">
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-sm sm:text-base text-muted-foreground">Carregando colaboradores...</p>
           </div>
         ) : filteredCollaborators.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredCollaborators.map((collaborator) => (
               <CollaboratorCard
                 key={collaborator.id}
@@ -140,13 +140,13 @@ const Index = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="bg-card rounded-lg shadow-card p-8 max-w-md mx-auto">
-              <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-card-foreground mb-2">
+          <div className="text-center py-8 sm:py-16">
+            <div className="bg-card rounded-lg shadow-card p-4 sm:p-8 max-w-md mx-auto">
+              <Users className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold text-card-foreground mb-2">
                 Nenhum colaborador encontrado
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Tente ajustar sua busca ou remover os filtros.
               </p>
             </div>
@@ -154,21 +154,21 @@ const Index = () => {
         )}
 
         {/* Footer */}
-        <footer className="mt-16 text-center py-8 border-t border-border/40">
-          <div className="space-y-3">
-            <p className="text-muted-foreground text-sm">
+        <footer className="mt-8 sm:mt-16 text-center py-6 sm:py-8 border-t border-border/40">
+          <div className="space-y-2 sm:space-y-3 px-2">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               © 2025 Gazin Assis Brasil - AC - Todos os direitos reservados.
             </p>
-            <div className="flex items-center justify-center gap-2 text-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
               <span className="text-muted-foreground">Desenvolvido por: Renato Almeida</span>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-auto p-1 text-muted-foreground hover:text-primary"
+                className="h-auto p-2 text-muted-foreground hover:text-primary"
                 onClick={() => window.open('https://instagram.com/renato_alme1da', '_blank')}
+                title="@renato_alme1da"
               >
-                <Instagram className="w-4 h-4 mr-1" />
-                @renato_alme1da
+                <Instagram className="w-4 h-4" />
               </Button>
             </div>
           </div>
