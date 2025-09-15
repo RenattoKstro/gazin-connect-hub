@@ -46,17 +46,17 @@ const Index = () => {
       <header className="bg-card shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-4 flex-1">
               <img 
                 src={gazinLogo} 
                 alt="Gazin Logo" 
-                className="w-12 h-auto rounded-lg shadow-md"
+                className="w-24 h-auto rounded-lg shadow-md"
               />
-              <div>
+              <div className="text-center">
                 <h1 className="text-3xl font-bold text-primary mb-1">
                   Gazin Assis Brasil
                 </h1>
-                <p className="text-muted-foreground flex items-center gap-2">
+                <p className="text-muted-foreground flex items-center gap-2 justify-center">
                   <Building2 className="w-4 h-4" />
                   Diretório de Colaboradores
                 </p>
@@ -64,7 +64,7 @@ const Index = () => {
             </div>
             
             {/* Auth Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start">
               {user ? (
                 <>
                   {isAdmin && (

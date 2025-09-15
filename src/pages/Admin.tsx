@@ -211,13 +211,13 @@ const Admin = () => {
       <header className="bg-card shadow-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-4 flex-1">
               <img 
                 src={gazinLogo} 
                 alt="Gazin Logo" 
-                className="w-10 h-auto rounded-lg"
+                className="w-20 h-auto rounded-lg shadow-md"
               />
-              <div>
+              <div className="text-center">
                 <h1 className="text-2xl font-bold text-primary">
                   Painel Administrativo
                 </h1>
@@ -226,7 +226,7 @@ const Admin = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={signOut} variant="outline" size="sm">
+            <Button onClick={signOut} variant="outline" size="sm" className="self-start">
               <LogOut className="w-4 h-4 mr-2" />
               Sair
             </Button>
@@ -296,9 +296,12 @@ const Admin = () => {
                     id="observations"
                     value={formData.observations}
                     onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
-                    placeholder="Informações adicionais..."
-                    rows={3}
+                    placeholder="Exemplo:&#10;* CAIXA&#10;* ENVIO DE PIX&#10;* ATENDIMENTO AO CLIENTE"
+                    rows={4}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Use * para criar tópicos e quebre linhas para organizar as funções
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="photo">Foto de Perfil</Label>
@@ -371,9 +374,9 @@ const Admin = () => {
                   </p>
                 )}
                 {collaborator.observations && (
-                  <p className="text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
+                  <div className="text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded whitespace-pre-wrap">
                     {collaborator.observations}
-                  </p>
+                  </div>
                 )}
               </CardContent>
             </Card>

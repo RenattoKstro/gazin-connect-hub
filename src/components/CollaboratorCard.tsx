@@ -71,9 +71,9 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
             )}
 
             {collaborator.observations && (
-              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+              <div className="text-sm text-muted-foreground mb-4 whitespace-pre-wrap">
                 {collaborator.observations}
-              </p>
+              </div>
             )}
 
             <div className="flex gap-2">
