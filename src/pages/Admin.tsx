@@ -247,13 +247,14 @@ const Admin = () => {
                 Adicionar Colaborador
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <DialogTitle>
                   {editingCollaborator ? "Editar Colaborador" : "Novo Colaborador"}
                 </DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="overflow-y-auto flex-1 pr-2">
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo *</Label>
                   <Input
@@ -312,12 +313,13 @@ const Admin = () => {
                     onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                   />
                 </div>
-                <DialogFooter>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Salvando..." : "Salvar"}
-                  </Button>
-                </DialogFooter>
-              </form>
+                  <DialogFooter className="mt-6">
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? "Salvando..." : "Salvar"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
