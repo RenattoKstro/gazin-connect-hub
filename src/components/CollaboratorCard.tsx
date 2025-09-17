@@ -71,7 +71,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
               text-center
               py-1
               transform
-              -rotate-45
+              rotate-45
               z-10
               shadow-md
             "
