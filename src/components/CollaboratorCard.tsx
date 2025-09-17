@@ -56,7 +56,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
         }`}
       >
         {collaborator.on_vacation && (
-          <div className="absolute top-0 right-0 z-10 bg-yellow-500 text-yellow-900 text-xs font-bold px-4 py-1 transform rotate-45 translate-x-6 -translate-y-2 origin-center">
+          <div className="absolute top-0 right-0 z-10 bg-yellow-500 text-yellow-900 text-xs font-bold px-3 py-1 transform rotate-45 origin-top-right">
             FÉRIAS
           </div>
         )}
