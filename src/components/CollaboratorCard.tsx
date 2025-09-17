@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, MessageCircle, Instagram, User } from "lucide-react";
+import { Phone, MessageCircle, Instagram } from "lucide-react";
 
 export interface Collaborator {
   id: string;
@@ -22,48 +22,71 @@ interface CollaboratorCardProps {
 export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
   const handleWhatsAppClick = () => {
     if (!collaborator.phone) return;
-    const phoneNumber = collaborator.phone.replace(/\D/g, '');
+    const phoneNumber = collaborator.phone.replace(/\D/g, "");
     const message = `Olá ${collaborator.name}!`;
-    const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodeURIComponent(
+      message
+    )}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const handleInstagramClick = () => {
     if (collaborator.instagram) {
-      const instagramUrl = collaborator.instagram.startsWith('http') 
-        ? collaborator.instagram 
-        : `https://instagram.com/${collaborator.instagram.replace('@', '')}`;
-      window.open(instagramUrl, '_blank');
+      const instagramUrl = collaborator.instagram.startsWith("http")
+        ? collaborator.instagram
+        : `https://instagram.com/${collaborator.instagram.replace("@", "")}`;
+      window.open(instagramUrl, "_blank");
     }
   };
 
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
   return (
     <div className="relative">
-      <Card 
-        className={`shadow-card transition-all duration-300 border-border/40 ${
-          collaborator.on_vacation 
-            ? 'opacity-50 pointer-events-none' 
-            : 'hover:shadow-elegant hover:scale-[1.02]'
+      <Card
+        className={`relative overflow-hidden shadow-card transition-all duration-300 border-border/40 ${
+          collaborator.on_vacation
+            ? "opacity-50 pointer-events-none"
+            : "hover:shadow-elegant hover:scale-[1.02]"
         }`}
       >
         {collaborator.on_vacation && (
-          <div className="absolute top-0 right-0 z-10 bg-yellow-500 text-yellow-900 text-xs font-bold px-3 py-1 transform rotate-45 origin-top-right">
+          <div
+            className="
+              absolute
+              left-[-40px]
+              top-4
+              w-40
+              bg-yellow-500
+              text-yellow-900
+              text-xs
+              font-bold
+              text-center
+              py-1
+              transform
+              -rotate-45
+              z-10
+              shadow-md
+            "
+          >
             FÉRIAS
           </div>
         )}
+
         <CardContent className="p-6">
           <div className="flex items-start space-x-4">
             <Avatar className="w-16 h-16 border-2 border-primary/20">
-              <AvatarImage src={collaborator.photo_url || undefined} alt={collaborator.name} />
+              <AvatarImage
+                src={collaborator.photo_url || undefined}
+                alt={collaborator.name}
+              />
               <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold text-lg">
                 {getInitials(collaborator.name)}
               </AvatarFallback>
@@ -76,7 +99,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
               <p className="text-primary font-medium mb-3">
                 {collaborator.position}
               </p>
-              
+
               {collaborator.phone && !collaborator.on_vacation && (
                 <div className="flex items-center text-muted-foreground mb-4">
                   <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
