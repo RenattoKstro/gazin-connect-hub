@@ -22,6 +22,7 @@ const Index = () => {
     const { data, error } = await supabase
       .from('collaborators')
       .select('*')
+      .order('pinned', { ascending: false })
       .order('name');
 
     if (!error && data) {
@@ -151,16 +152,17 @@ const Index = () => {
               © 2025 Gazin Assis Brasil - AC - Todos os direitos reservados.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
-              <span className="text-muted-foreground">Desenvolvido por: Renato Almeida</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto p-2 text-muted-foreground hover:text-primary"
-                onClick={() => window.open('https://instagram.com/renato_alme1da', '_blank')}
-                title="@renato_alme1da"
-              >
-                <Instagram className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <Instagram className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Desenvolvido por:</span>
+                <button
+                  className="text-muted-foreground hover:text-primary underline transition-colors"
+                  onClick={() => window.open('https://instagram.com/renato_alme1da', '_blank')}
+                  title="@renato_alme1da"
+                >
+                  Renato Almeida
+                </button>
+              </div>
             </div>
             {!user && (
               <div className="mt-4 pt-2 border-t border-border/20">

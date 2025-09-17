@@ -24,6 +24,7 @@ export type Database = {
           on_vacation: boolean
           phone: string | null
           photo_url: string | null
+          pinned: boolean
           position: string
           updated_at: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           on_vacation?: boolean
           phone?: string | null
           photo_url?: string | null
+          pinned?: boolean
           position: string
           updated_at?: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           on_vacation?: boolean
           phone?: string | null
           photo_url?: string | null
+          pinned?: boolean
           position?: string
           updated_at?: string
         }

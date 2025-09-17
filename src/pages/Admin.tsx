@@ -23,6 +23,7 @@ interface Collaborator {
   observations: string | null;
   photo_url: string | null;
   on_vacation: boolean;
+  pinned: boolean;
 }
 
 const Admin = () => {
@@ -39,6 +40,7 @@ const Admin = () => {
     instagram: "",
     observations: "",
     on_vacation: false,
+    pinned: false,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -55,6 +57,7 @@ const Admin = () => {
     const { data, error } = await supabase
       .from('collaborators')
       .select('*')
+      .order('pinned', { ascending: false })
       .order('name');
 
     if (error) {
@@ -177,6 +180,7 @@ const Admin = () => {
       instagram: "",
       observations: "",
       on_vacation: false,
+      pinned: false,
     });
     setEditingCollaborator(null);
     setSelectedFile(null);
@@ -190,6 +194,7 @@ const Admin = () => {
       instagram: collaborator.instagram || "",
       observations: collaborator.observations || "",
       on_vacation: collaborator.on_vacation,
+      pinned: collaborator.pinned,
     });
     setEditingCollaborator(collaborator);
     setDialogOpen(true);
@@ -322,6 +327,21 @@ const Admin = () => {
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     Colaborador em férias
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox
+                    id="pinned"
+                    checked={formData.pinned}
+                    onCheckedChange={(checked) => 
+                      setFormData({ ...formData, pinned: checked as boolean })
+                    }
+                  />
+                  <Label 
+                    htmlFor="pinned" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Fixar no topo
                   </Label>
                 </div>
                 <div className="space-y-2">

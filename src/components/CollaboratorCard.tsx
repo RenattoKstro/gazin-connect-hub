@@ -12,6 +12,7 @@ export interface Collaborator {
   instagram: string | null;
   observations: string | null;
   on_vacation: boolean;
+  pinned: boolean;
 }
 
 interface CollaboratorCardProps {
@@ -55,7 +56,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
         }`}
       >
         {collaborator.on_vacation && (
-          <div className="absolute top-2 right-2 z-10 bg-yellow-500 text-yellow-900 px-2 py-1 rounded text-xs font-bold">
+          <div className="absolute top-0 right-0 z-10 bg-yellow-500 text-yellow-900 text-xs font-bold px-4 py-1 transform rotate-45 translate-x-6 -translate-y-2 origin-center">
             FÉRIAS
           </div>
         )}
@@ -76,7 +77,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
                 {collaborator.position}
               </p>
               
-              {collaborator.phone && (
+              {collaborator.phone && !collaborator.on_vacation && (
                 <div className="flex items-center text-muted-foreground mb-4">
                   <Phone className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="text-sm">{collaborator.phone}</span>
