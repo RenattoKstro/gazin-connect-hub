@@ -75,31 +75,22 @@ const Index = () => {
               </div>
             </div>
             
-            {/* Auth Actions */}
-            <div className="flex items-center gap-2 justify-center sm:self-start">
-              {user ? (
-                <>
-                  {isAdmin && (
-                    <Button asChild variant="outline" size="sm">
-                      <Link to="/admin">
-                        <Settings className="w-4 h-4 sm:mr-2" />
-                        <span className="hidden sm:inline">Admin</span>
-                      </Link>
-                    </Button>
-                  )}
-                  <Button onClick={signOut} variant="ghost" size="sm">
-                    Sair
+            {/* Auth Actions - Only show for authenticated users */}
+            {user && (
+              <div className="flex items-center gap-2 justify-center sm:self-start">
+                {isAdmin && (
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/admin">
+                      <Settings className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Admin</span>
+                    </Link>
                   </Button>
-                </>
-              ) : (
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/auth">
-                    <LogIn className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Login</span>
-                  </Link>
+                )}
+                <Button onClick={signOut} variant="ghost" size="sm">
+                  Sair
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Search Bar */}
@@ -171,6 +162,16 @@ const Index = () => {
                 <Instagram className="w-4 h-4" />
               </Button>
             </div>
+            {!user && (
+              <div className="mt-4 pt-2 border-t border-border/20">
+                <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                  <Link to="/auth">
+                    <LogIn className="w-3 h-3 mr-1" />
+                    Acesso Restrito
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         </footer>
       </main>

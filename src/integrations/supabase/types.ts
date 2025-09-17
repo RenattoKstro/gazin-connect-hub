@@ -21,6 +21,7 @@ export type Database = {
           instagram: string | null
           name: string
           observations: string | null
+          on_vacation: boolean
           phone: string | null
           photo_url: string | null
           position: string
@@ -32,6 +33,7 @@ export type Database = {
           instagram?: string | null
           name: string
           observations?: string | null
+          on_vacation?: boolean
           phone?: string | null
           photo_url?: string | null
           position: string
@@ -43,6 +45,7 @@ export type Database = {
           instagram?: string | null
           name?: string
           observations?: string | null
+          on_vacation?: boolean
           phone?: string | null
           photo_url?: string | null
           position?: string

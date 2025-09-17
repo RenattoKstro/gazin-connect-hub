@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Upload, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
 interface Collaborator {
@@ -21,6 +22,7 @@ interface Collaborator {
   instagram: string | null;
   observations: string | null;
   photo_url: string | null;
+  on_vacation: boolean;
 }
 
 const Admin = () => {
@@ -36,6 +38,7 @@ const Admin = () => {
     phone: "",
     instagram: "",
     observations: "",
+    on_vacation: false,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -173,6 +176,7 @@ const Admin = () => {
       phone: "",
       instagram: "",
       observations: "",
+      on_vacation: false,
     });
     setEditingCollaborator(null);
     setSelectedFile(null);
@@ -185,6 +189,7 @@ const Admin = () => {
       phone: collaborator.phone || "",
       instagram: collaborator.instagram || "",
       observations: collaborator.observations || "",
+      on_vacation: collaborator.on_vacation,
     });
     setEditingCollaborator(collaborator);
     setDialogOpen(true);
@@ -303,6 +308,21 @@ const Admin = () => {
                   <p className="text-xs text-muted-foreground">
                     Use * para criar tópicos e quebre linhas para organizar as funções
                   </p>
+                </div>
+                <div className="flex items-center space-x-2 py-2">
+                  <Checkbox
+                    id="vacation"
+                    checked={formData.on_vacation}
+                    onCheckedChange={(checked) => 
+                      setFormData({ ...formData, on_vacation: checked as boolean })
+                    }
+                  />
+                  <Label 
+                    htmlFor="vacation" 
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Colaborador em férias
+                  </Label>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="photo">Foto de Perfil</Label>
