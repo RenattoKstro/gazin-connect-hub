@@ -153,8 +153,8 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
               <div className="flex items-center gap-2">
-                <Instagram className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Desenvolvido por:</span>
+                <Instagram className="w-4 h-4 text-muted-foreground" />
                 <button
                   className="text-muted-foreground hover:text-primary underline transition-colors"
                   onClick={() => window.open('https://instagram.com/renato_alme1da', '_blank')}
