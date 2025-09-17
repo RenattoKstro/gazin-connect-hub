@@ -61,7 +61,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
           <div
             className="
               absolute
-              left-[-40px]
+              right-[-40px]
               top-4
               w-40
               bg-yellow-500
