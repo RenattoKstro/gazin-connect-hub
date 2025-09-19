@@ -98,7 +98,7 @@ const Index = () => {
           <SearchBar
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="Buscar por nome, cargo ou observações..."
+            placeholder="Buscar por nome, cargo ou funções..."
           />
         </div>
       </header>
