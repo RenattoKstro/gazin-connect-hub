@@ -8,7 +8,7 @@
    Todas as cores, gradientes, fontes e utilitários definidos aqui.
    ----------------------------------------------------------- */
 
-/* ========== Fonte Renfrew ========== */
+/* ========== Fonte Renfrewn ========== */
 @font-face {
   font-family: "Renfrew";
   src: url("./assets/fonts/RENFREWN.TTF") format("truetype");
@@ -158,8 +158,8 @@
     max-width: 1200px;
   }
 
-  /* Classe para o título com a fonte Renfrew */
+  /* Classe para o título com a fonte Renfrewn */
   .app-title {
-    font-family: "Renfrew", sans-serif;
+    font-family: "Renfrewn", sans-serif;
   }
 }
