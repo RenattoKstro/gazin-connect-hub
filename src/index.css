@@ -3,18 +3,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* -----------------------------------------------------------
-   Gazin Assis Brasil - Design System
-   Todas as cores, gradientes, fontes e utilitários definidos aqui.
-   ----------------------------------------------------------- */
-
-/* ========== Fonte Renfrewn ========== */
+/* ===== Fonte Renfrew ===== */
 @font-face {
   font-family: "Renfrew";
   src: url("/fonts/RENFREWN.TTF") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
+
 
 /* ========== Variáveis de cor, gradientes, sombras ========== */
 @layer base {
