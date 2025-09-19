@@ -66,7 +66,7 @@ const Index = () => {
                 className="w-32 sm:w-40 md:w-48 h-auto rounded-lg shadow-md"
               />
               <div className="text-center">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
+                <h1 className="app-title text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                   Gazin Assis Brasil
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2 justify-center">
