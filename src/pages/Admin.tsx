@@ -12,6 +12,7 @@ import { Navigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Upload, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
+import TVImageUpload from "@/components/TVImageUpload";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
 interface Collaborator {
@@ -26,10 +27,19 @@ interface Collaborator {
   pinned: boolean;
 }
 
+interface TVImage {
+  id: string;
+  name: string;
+  image_url: string;
+  display_order: number;
+  active: boolean;
+}
+
 const Admin = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { toast } = useToast();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [tvImages, setTvImages] = useState<TVImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCollaborator, setEditingCollaborator] = useState<Collaborator | null>(null);
@@ -51,6 +61,7 @@ const Admin = () => {
 
   useEffect(() => {
     fetchCollaborators();
+    fetchTVImages();
   }, []);
 
   const fetchCollaborators = async () => {
@@ -70,6 +81,23 @@ const Admin = () => {
       setCollaborators(data || []);
     }
     setIsLoading(false);
+  };
+
+  const fetchTVImages = async () => {
+    const { data, error } = await supabase
+      .from('tv_images')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      toast({
+        title: "Erro ao carregar imagens da TV",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setTvImages(data || []);
+    }
   };
 
   const uploadPhoto = async (file: File): Promise<string | null> => {
@@ -362,6 +390,14 @@ const Admin = () => {
               </div>
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* TV Images Section */}
+        <div className="mb-8">
+          <TVImageUpload 
+            images={tvImages} 
+            onImagesChange={fetchTVImages} 
+          />
         </div>
 
         {/* Collaborators Grid */}
