@@ -11,7 +11,7 @@
 /* ========== Fonte Renfrewn ========== */
 @font-face {
   font-family: "Renfrew";
-  src: url("./assets/fonts/RENFREWN.TTF") format("truetype");
+  src: url("/fonts/RENFREWN.TTF") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
