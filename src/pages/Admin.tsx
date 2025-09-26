@@ -357,7 +357,6 @@ const Admin = () => {
                        <SelectValue placeholder="Selecione um status (opcional)" />
                      </SelectTrigger>
                      <SelectContent>
-                       <SelectItem value="">Nenhum</SelectItem>
                        <SelectItem value="Recebimento">Recebimento</SelectItem>
                        <SelectItem value="Renegociação">Renegociação</SelectItem>
                        <SelectItem value="Cobranças">Cobranças</SelectItem>
