@@ -26,6 +26,7 @@ export type Database = {
           photo_url: string | null
           pinned: boolean
           position: string
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           photo_url?: string | null
           pinned?: boolean
           position: string
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           photo_url?: string | null
           pinned?: boolean
           position?: string
+          status?: string | null
           updated_at?: string
         }
         Relationships: []

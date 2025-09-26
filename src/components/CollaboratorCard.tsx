@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Phone, MessageCircle, Instagram } from "lucide-react";
 
 export interface Collaborator {
@@ -13,6 +14,7 @@ export interface Collaborator {
   observations: string | null;
   on_vacation: boolean;
   pinned: boolean;
+  status: string | null;
 }
 
 interface CollaboratorCardProps {
@@ -48,6 +50,27 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
       .slice(0, 2);
   };
 
+  const getStatusVariant = (status: string | null) => {
+    switch (status) {
+      case 'Recebimento':
+        return 'default'; // Primary color
+      case 'Renegociação':
+        return 'secondary';
+      case 'Cobranças':
+        return 'destructive';
+      case 'Vendas':
+        return 'default';
+      case 'Entregas':
+        return 'secondary';
+      case 'Montagem':
+        return 'outline';
+      case 'Gerencia':
+        return 'default';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <div className="relative">
       <Card
@@ -77,6 +100,14 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
             "
           >
             FÉRIAS
+          </div>
+        )}
+
+        {collaborator.status && !collaborator.on_vacation && (
+          <div className="absolute top-4 right-4 z-10">
+            <Badge variant={getStatusVariant(collaborator.status)} className="text-xs font-semibold">
+              {collaborator.status.toUpperCase()}
+            </Badge>
           </div>
         )}
 

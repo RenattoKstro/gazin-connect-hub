@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { Plus, Edit, Trash2, Upload, LogOut } from "lucide-react";
@@ -25,6 +26,7 @@ interface Collaborator {
   photo_url: string | null;
   on_vacation: boolean;
   pinned: boolean;
+  status: string | null;
 }
 
 interface TVImage {
@@ -51,6 +53,7 @@ const Admin = () => {
     observations: "",
     on_vacation: false,
     pinned: false,
+    status: null as string | null,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -209,6 +212,7 @@ const Admin = () => {
       observations: "",
       on_vacation: false,
       pinned: false,
+      status: null,
     });
     setEditingCollaborator(null);
     setSelectedFile(null);
@@ -223,6 +227,7 @@ const Admin = () => {
       observations: collaborator.observations || "",
       on_vacation: collaborator.on_vacation,
       pinned: collaborator.pinned,
+      status: collaborator.status,
     });
     setEditingCollaborator(collaborator);
     setDialogOpen(true);
@@ -329,19 +334,40 @@ const Admin = () => {
                     placeholder="@usuario"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="observations">Observações</Label>
-                  <Textarea
-                    id="observations"
-                    value={formData.observations}
-                    onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
-                    placeholder="Exemplo:&#10;* CAIXA&#10;* ENVIO DE PIX&#10;* ATENDIMENTO AO CLIENTE"
-                    rows={4}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Use * para criar tópicos e quebre linhas para organizar as funções
-                  </p>
-                </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="observations">Observações</Label>
+                   <Textarea
+                     id="observations"
+                     value={formData.observations}
+                     onChange={(e) => setFormData({ ...formData, observations: e.target.value })}
+                     placeholder="Exemplo:&#10;* CAIXA&#10;* ENVIO DE PIX&#10;* ATENDIMENTO AO CLIENTE"
+                     rows={4}
+                   />
+                   <p className="text-xs text-muted-foreground">
+                     Use * para criar tópicos e quebre linhas para organizar as funções
+                   </p>
+                 </div>
+                 <div className="space-y-2">
+                   <Label htmlFor="status">Status/Setor</Label>
+                   <Select
+                     value={formData.status || ""}
+                     onValueChange={(value) => setFormData({ ...formData, status: value || null })}
+                   >
+                     <SelectTrigger>
+                       <SelectValue placeholder="Selecione um status (opcional)" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="">Nenhum</SelectItem>
+                       <SelectItem value="Recebimento">Recebimento</SelectItem>
+                       <SelectItem value="Renegociação">Renegociação</SelectItem>
+                       <SelectItem value="Cobranças">Cobranças</SelectItem>
+                       <SelectItem value="Vendas">Vendas</SelectItem>
+                       <SelectItem value="Entregas">Entregas</SelectItem>
+                       <SelectItem value="Montagem">Montagem</SelectItem>
+                       <SelectItem value="Gerencia">Gerencia</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
                 <div className="flex items-center space-x-2 py-2">
                   <Checkbox
                     id="vacation"
