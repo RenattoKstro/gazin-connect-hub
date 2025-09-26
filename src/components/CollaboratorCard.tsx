@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Phone, MessageCircle, Instagram } from "lucide-react";
 
 export interface Collaborator {
@@ -50,24 +49,24 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
       .slice(0, 2);
   };
 
-  const getStatusVariant = (status: string | null) => {
+  const getStatusColors = (status: string | null) => {
     switch (status) {
       case 'Recebimento':
-        return 'default'; // Primary color
+        return 'bg-blue-500 text-blue-900';
       case 'Renegociação':
-        return 'secondary';
+        return 'bg-orange-500 text-orange-900';
       case 'Cobranças':
-        return 'destructive';
+        return 'bg-red-500 text-red-900';
       case 'Vendas':
-        return 'default';
+        return 'bg-green-500 text-green-900';
       case 'Entregas':
-        return 'secondary';
+        return 'bg-purple-500 text-purple-900';
       case 'Montagem':
-        return 'outline';
+        return 'bg-indigo-500 text-indigo-900';
       case 'Gerencia':
-        return 'default';
+        return 'bg-gray-500 text-gray-900';
       default:
-        return 'outline';
+        return 'bg-gray-500 text-gray-900';
     }
   };
 
@@ -104,10 +103,24 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
         )}
 
         {collaborator.status && !collaborator.on_vacation && (
-          <div className="absolute top-4 right-4 z-10">
-            <Badge variant={getStatusVariant(collaborator.status)} className="text-xs font-semibold">
-              {collaborator.status.toUpperCase()}
-            </Badge>
+          <div
+            className={`
+              absolute
+              right-[-40px]
+              top-4
+              w-40
+              text-xs
+              font-bold
+              text-center
+              py-1
+              transform
+              rotate-45
+              z-10
+              shadow-md
+              ${getStatusColors(collaborator.status)}
+            `}
+          >
+            {collaborator.status.toUpperCase()}
           </div>
         )}
 
