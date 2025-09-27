@@ -71,21 +71,20 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
   };
 
   return (
-    <div className="relative">
-      <Card
-        className={`relative overflow-hidden shadow-card transition-all duration-300 border-border/40 ${
-          collaborator.on_vacation
-            ? "opacity-50 pointer-events-none"
-            : "hover:shadow-elegant hover:scale-[1.02]"
-        }`}
-      >
+    <Card
+      className={`relative overflow-hidden shadow-card transition-all duration-300 border-border/40 ${
+        collaborator.on_vacation
+          ? "opacity-50 pointer-events-none"
+          : "hover:shadow-elegant hover:scale-[1.02]"
+      }`}
+    >
         {collaborator.on_vacation && (
           <div
             className="
               absolute
-              right-[-40px]
-              top-4
-              w-40
+              right-[-30px]
+              top-6
+              w-32
               bg-yellow-500
               text-yellow-900
               text-xs
@@ -94,7 +93,7 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
               py-1
               transform
               rotate-45
-              z-10
+              z-[1]
               shadow-md
             "
           >
@@ -106,16 +105,16 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
           <div
             className={`
               absolute
-              right-[-40px]
-              top-4
-              w-40
+              right-[-30px]
+              top-6
+              w-32
               text-xs
               font-bold
               text-center
               py-1
               transform
               rotate-45
-              z-10
+              z-[1]
               shadow-md
               ${getStatusColors(collaborator.status)}
             `}
@@ -186,7 +185,6 @@ export const CollaboratorCard = ({ collaborator }: CollaboratorCardProps) => {
             </div>
           </div>
         </CardContent>
-      </Card>
-    </div>
+    </Card>
   );
 };
