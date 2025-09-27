@@ -15,6 +15,26 @@ const TV = () => {
 
   useEffect(() => {
     fetchTVImages();
+    
+    // Set up real-time subscription to detect changes
+    const channel = supabase
+      .channel('tv_images_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'tv_images' 
+        }, 
+        () => {
+          // Refetch images when there are changes
+          fetchTVImages();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
