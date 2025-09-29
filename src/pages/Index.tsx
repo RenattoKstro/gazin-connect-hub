@@ -151,7 +151,21 @@ const Index = () => {
             <p className="text-muted-foreground text-xs sm:text-sm">
               © 2025 Gazin Assis Brasil - AC - Todos os direitos reservados.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm">
+            <div className="flex flex-col items-center justify-center gap-2 text-xs sm:text-sm">
+              <button 
+                className="text-muted-foreground hover:text-primary transition-colors underline" 
+                onClick={() => window.open('/termos_uso_politica_privacidade.pdf', '_blank')}
+                title="Termos de Uso e Política de Privacidade"
+              >
+                Termos de Uso e Política de Privacidade
+              </button>
+              <a 
+                href="mailto:contato@gazinassisbrasil.shop" 
+                className="text-muted-foreground hover:text-primary transition-colors"
+                title="Enviar e-mail"
+              >
+                📧 contato@gazinassisbrasil.shop
+              </a>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">Desenvolvido por:</span>
                 <Instagram className="w-4 h-4 text-muted-foreground" />
