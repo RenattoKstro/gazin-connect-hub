@@ -5,18 +5,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Users, Building2, Settings, LogIn, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Index = () => {
+  const { nome } = useParams<{ nome: string }>();
   const { user, isAdmin, signOut } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(nome || "");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetchCollaborators();
   }, []);
+
+  useEffect(() => {
+    if (nome) {
+      setSearchTerm(nome);
+    }
+  }, [nome]);
 
   const fetchCollaborators = async () => {
     const { data, error } = await supabase
