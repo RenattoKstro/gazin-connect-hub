@@ -3,7 +3,7 @@ import { CollaboratorCard, Collaborator } from "@/components/CollaboratorCard";
 import { SearchBar } from "@/components/SearchBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, Building2, Settings, LogIn, Instagram } from "lucide-react";
+import { Users, Building2, Settings, LogIn, Instagram, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import gazinLogo from "@/assets/gazin-logo-new.png";
@@ -86,6 +86,12 @@ const Index = () => {
             {/* Auth Actions - Only show for authenticated users */}
             {user && (
               <div className="flex items-center gap-2 justify-center sm:self-start">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/downloads">
+                    <FileDown className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Downloads</span>
+                  </Link>
+                </Button>
                 {isAdmin && (
                   <Button asChild variant="outline" size="sm">
                     <Link to="/admin">
