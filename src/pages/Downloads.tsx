@@ -1,27 +1,18 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
-import { 
-  FileText, 
-  Image as ImageIcon, 
-  FileDown, 
-  Trash2, 
-  Upload, 
-  Link as LinkIcon,
-  Home,
-  LogOut
-} from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
+import { FileText, Download, Trash2, Plus, Image, FileIcon, Smartphone, ExternalLink, LogOut, Home } from "lucide-react";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
-interface Download {
+interface DownloadFile {
   id: string;
   name: string;
   file_type: string;
@@ -31,33 +22,27 @@ interface Download {
   created_at: string;
 }
 
-const fileTypeIcons: Record<string, typeof FileText> = {
-  pdf: FileText,
-  doc: FileText,
-  docx: FileText,
-  image: ImageIcon,
-  apk: FileDown,
-};
-
 const Downloads = () => {
   const { isAdmin, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [downloads, setDownloads] = useState<Download[]>([]);
+  const { toast } = useToast();
+  const [downloads, setDownloads] = useState<DownloadFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Form states
-  const [fileName, setFileName] = useState("");
-  const [fileType, setFileType] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    file_type: "",
+    external_link: "",
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [externalLink, setExternalLink] = useState("");
 
   useEffect(() => {
     fetchDownloads();
   }, []);
 
   const fetchDownloads = async () => {
+    setIsLoading(true);
     const { data, error } = await supabase
       .from("downloads")
       .select("*")
@@ -75,19 +60,36 @@ const Downloads = () => {
     setIsLoading(false);
   };
 
-  const handleFileUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!fileName || !fileType) {
+  const getFileIcon = (fileType: string) => {
+    switch (fileType.toLowerCase()) {
+      case "pdf":
+        return <FileText className="w-12 h-12 text-red-500" />;
+      case "doc":
+      case "docx":
+        return <FileText className="w-12 h-12 text-blue-500" />;
+      case "apk":
+        return <Smartphone className="w-12 h-12 text-green-500" />;
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "webp":
+        return <Image className="w-12 h-12 text-purple-500" />;
+      default:
+        return <FileIcon className="w-12 h-12 text-gray-500" />;
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!formData.name || !formData.file_type) {
       toast({
         title: "Campos obrigatórios",
-        description: "Preencha o nome e tipo do arquivo",
+        description: "Preencha o nome e o tipo do arquivo",
         variant: "destructive",
       });
       return;
     }
 
-    if (!selectedFile && !externalLink) {
+    if (!selectedFile && !formData.external_link) {
       toast({
         title: "Arquivo ou link necessário",
         description: "Selecione um arquivo ou adicione um link externo",
@@ -96,16 +98,16 @@ const Downloads = () => {
       return;
     }
 
-    setUploading(true);
+    setIsUploading(true);
 
     try {
       let fileUrl = null;
       let fileSize = null;
 
-      // Upload file if selected
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
-        const filePath = `${Date.now()}_${fileName}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from("downloads")
@@ -121,28 +123,23 @@ const Downloads = () => {
         fileSize = selectedFile.size;
       }
 
-      // Insert into database
       const { error: insertError } = await supabase.from("downloads").insert({
-        name: fileName,
-        file_type: fileType,
+        name: formData.name,
+        file_type: formData.file_type,
         file_url: fileUrl,
-        external_link: externalLink || null,
+        external_link: formData.external_link || null,
         file_size: fileSize,
       });
 
       if (insertError) throw insertError;
 
       toast({
-        title: "Sucesso!",
+        title: "Sucesso",
         description: "Download adicionado com sucesso",
       });
 
-      // Reset form
-      setFileName("");
-      setFileType("");
-      setSelectedFile(null);
-      setExternalLink("");
-      setDialogOpen(false);
+      setIsDialogOpen(false);
+      resetForm();
       fetchDownloads();
     } catch (error: any) {
       toast({
@@ -151,13 +148,12 @@ const Downloads = () => {
         variant: "destructive",
       });
     } finally {
-      setUploading(false);
+      setIsUploading(false);
     }
   };
 
   const handleDelete = async (id: string, fileUrl: string | null) => {
     try {
-      // Delete from storage if file exists
       if (fileUrl) {
         const filePath = fileUrl.split("/downloads/")[1];
         if (filePath) {
@@ -165,13 +161,12 @@ const Downloads = () => {
         }
       }
 
-      // Delete from database
       const { error } = await supabase.from("downloads").delete().eq("id", id);
 
       if (error) throw error;
 
       toast({
-        title: "Sucesso!",
+        title: "Sucesso",
         description: "Download removido com sucesso",
       });
 
@@ -185,9 +180,13 @@ const Downloads = () => {
     }
   };
 
-  const getFileIcon = (fileType: string) => {
-    const Icon = fileTypeIcons[fileType.toLowerCase()] || FileDown;
-    return <Icon className="w-12 h-12 text-primary" />;
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      file_type: "",
+      external_link: "",
+    });
+    setSelectedFile(null);
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -196,167 +195,185 @@ const Downloads = () => {
     return mb > 1 ? `${mb.toFixed(2)} MB` : `${(bytes / 1024).toFixed(2)} KB`;
   };
 
-  const handleDownloadClick = (download: Download) => {
-    const url = download.file_url || download.external_link;
-    if (url) {
-      window.open(url, "_blank");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src={gazinLogo} alt="Gazin Logo" className="h-12" />
-            <h1 className="text-2xl font-bold">Downloads</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <Home className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={signOut}>
-              <LogOut className="h-5 w-5" />
-            </Button>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src={gazinLogo} alt="Gazin Logo" className="h-12" />
+              <h1 className="text-2xl font-bold">Downloads</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" asChild>
+                <Link to="/">
+                  <Home className="w-4 h-4 mr-2" />
+                  Início
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={signOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Admin Upload Section */}
         {isAdmin && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Adicionar Download</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Novo Download
+          <div className="mb-6">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Download
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Arquivo para Download</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Nome do Arquivo *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Ex: Manual do Usuário"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="file_type">Tipo de Arquivo *</Label>
+                    <Select
+                      value={formData.file_type}
+                      onValueChange={(value) => setFormData({ ...formData, file_type: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pdf">PDF</SelectItem>
+                        <SelectItem value="doc">DOC</SelectItem>
+                        <SelectItem value="docx">DOCX</SelectItem>
+                        <SelectItem value="apk">APK</SelectItem>
+                        <SelectItem value="jpg">JPG</SelectItem>
+                        <SelectItem value="png">PNG</SelectItem>
+                        <SelectItem value="webp">WEBP</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="file">Arquivo (até 50MB)</Label>
+                    <Input
+                      id="file"
+                      type="file"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      accept=".pdf,.doc,.docx,.apk,.jpg,.jpeg,.png,.webp"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Para arquivos maiores de 50MB, use o link externo abaixo
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="external_link">Link Externo (opcional)</Label>
+                    <Input
+                      id="external_link"
+                      value={formData.external_link}
+                      onChange={(e) => setFormData({ ...formData, external_link: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleFileUpload}
+                    disabled={isUploading}
+                    className="w-full"
+                  >
+                    {isUploading ? "Enviando..." : "Adicionar"}
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Adicionar Download</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleFileUpload} className="space-y-4">
-                    <div>
-                      <Label htmlFor="fileName">Nome do Arquivo</Label>
-                      <Input
-                        id="fileName"
-                        value={fileName}
-                        onChange={(e) => setFileName(e.target.value)}
-                        placeholder="Ex: Manual de Instruções"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="fileType">Tipo de Arquivo</Label>
-                      <Select value={fileType} onValueChange={setFileType} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pdf">PDF</SelectItem>
-                          <SelectItem value="doc">DOC</SelectItem>
-                          <SelectItem value="docx">DOCX</SelectItem>
-                          <SelectItem value="image">Imagem</SelectItem>
-                          <SelectItem value="apk">APK</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="file">
-                        Arquivo (até 50MB)
-                      </Label>
-                      <Input
-                        id="file"
-                        type="file"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.apk"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Para arquivos maiores, use o link externo abaixo
-                      </p>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="externalLink">Link Externo (opcional)</Label>
-                      <Input
-                        id="externalLink"
-                        type="url"
-                        value={externalLink}
-                        onChange={(e) => setExternalLink(e.target.value)}
-                        placeholder="https://..."
-                      />
-                    </div>
-
-                    <Button type="submit" className="w-full" disabled={uploading}>
-                      {uploading ? "Enviando..." : "Adicionar"}
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
 
-        {/* Downloads Grid */}
         {isLoading ? (
           <div className="text-center py-12">Carregando downloads...</div>
         ) : downloads.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <FileDown className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Nenhum download disponível</p>
-            </CardContent>
-          </Card>
+          <div className="text-center py-12 text-muted-foreground">
+            Nenhum arquivo disponível para download
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {downloads.map((download) => (
               <Card key={download.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center text-center space-y-4">
+                <CardHeader>
+                  <div className="flex justify-center mb-4">
                     {getFileIcon(download.file_type)}
-                    <div className="space-y-1 w-full">
-                      <h3 className="font-semibold text-lg">{download.name}</h3>
-                      <p className="text-sm text-muted-foreground uppercase">
-                        {download.file_type}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatFileSize(download.file_size)}
-                      </p>
-                    </div>
-                    <div className="flex gap-2 w-full">
-                      <Button
-                        onClick={() => handleDownloadClick(download)}
-                        className="flex-1"
-                      >
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Download
-                      </Button>
-                      {isAdmin && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => handleDelete(download.id, download.file_url)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
                   </div>
+                  <CardTitle className="text-center">{download.name}</CardTitle>
+                  <CardDescription className="text-center">
+                    {download.file_type.toUpperCase()} • {formatFileSize(download.file_size)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      const url = download.external_link || download.file_url;
+                      if (url) window.open(url, "_blank");
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    {download.external_link ? "Abrir Link" : "Baixar"}
+                    {download.external_link && <ExternalLink className="w-4 h-4 ml-2" />}
+                  </Button>
+
+                  {isAdmin && (
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => handleDelete(download.id, download.file_url)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remover
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </main>
+
+      <footer className="border-t bg-card/50 backdrop-blur-sm mt-12">
+        <div className="container mx-auto px-4 py-6 text-center text-sm text-muted-foreground">
+          <p>© 2024 Gazin Assis Brasil. Todos os direitos reservados.</p>
+          <div className="flex justify-center gap-4 mt-2">
+            <a
+              href="/termos_uso_politica_privacidade.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary transition-colors"
+            >
+              Termos de Uso e Política de Privacidade
+            </a>
+            <span>•</span>
+            <a
+              href="mailto:contato@gazinassisbrasil.shop"
+              className="hover:text-primary transition-colors"
+            >
+              contato@gazinassisbrasil.shop
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
