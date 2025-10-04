@@ -116,6 +116,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_duel: {
+        Row: {
+          campaign_name: string
+          created_at: string
+          goal_value: number
+          id: string
+          team_a_members: Json
+          team_a_name: string
+          team_b_members: Json
+          team_b_name: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_name?: string
+          created_at?: string
+          goal_value?: number
+          id?: string
+          team_a_members?: Json
+          team_a_name?: string
+          team_b_members?: Json
+          team_b_name?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_name?: string
+          created_at?: string
+          goal_value?: number
+          id?: string
+          team_a_members?: Json
+          team_a_name?: string
+          team_b_members?: Json
+          team_b_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tv_images: {
         Row: {
           active: boolean

@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import TV from "./pages/TV";
 import Downloads from "./pages/Downloads";
+import SalesDuel from "./pages/SalesDuel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/downloads" element={<Downloads />} />
             <Route path="/tv" element={<TV />} />
+            <Route path="/duelo" element={<SalesDuel />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
