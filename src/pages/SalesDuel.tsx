@@ -185,6 +185,9 @@ const SalesDuel = () => {
       setTeamAMembers(importedMembers.slice(0, midPoint));
       setTeamBMembers(importedMembers.slice(midPoint));
 
+      // Save to database after import
+      await handleSave();
+      
       toast.success(`${importedMembers.length} vendedores importados com sucesso!`);
       setImportOpen(false);
       
@@ -277,7 +280,122 @@ const SalesDuel = () => {
                     Configuração
                   </Button>
                 </DialogTrigger>
-...
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Configuração da Campanha</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nome da Campanha</Label>
+                        <Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} />
+                      </div>
+                      <div>
+                        <Label>Meta do Gatilho (R$)</Label>
+                        <Input type="number" value={goalValue} onChange={(e) => setGoalValue(Number(e.target.value))} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nome da Equipe A</Label>
+                        <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
+                      </div>
+                      <div>
+                        <Label>Nome da Equipe B</Label>
+                        <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <Label>Integrantes da Equipe A</Label>
+                          <Button type="button" size="sm" onClick={() => addMember("A")}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            Adicionar
+                          </Button>
+                        </div>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {teamAMembers.map((member, idx) => (
+                            <div key={idx} className="flex gap-2 items-end">
+                              <div className="flex-1">
+                                <Label className="text-xs">Nome</Label>
+                                <Input
+                                  value={member.name}
+                                  onChange={(e) => updateMember("A", idx, "name", e.target.value)}
+                                  placeholder="Nome do vendedor"
+                                />
+                              </div>
+                              <div className="w-32">
+                                <Label className="text-xs">Valor (R$)</Label>
+                                <Input
+                                  type="number"
+                                  value={member.value}
+                                  onChange={(e) => updateMember("A", idx, "value", Number(e.target.value))}
+                                  placeholder="0"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => removeMember("A", idx)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <Label>Integrantes da Equipe B</Label>
+                          <Button type="button" size="sm" onClick={() => addMember("B")}>
+                            <Plus className="h-4 w-4 mr-1" />
+                            Adicionar
+                          </Button>
+                        </div>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {teamBMembers.map((member, idx) => (
+                            <div key={idx} className="flex gap-2 items-end">
+                              <div className="flex-1">
+                                <Label className="text-xs">Nome</Label>
+                                <Input
+                                  value={member.name}
+                                  onChange={(e) => updateMember("B", idx, "name", e.target.value)}
+                                  placeholder="Nome do vendedor"
+                                />
+                              </div>
+                              <div className="w-32">
+                                <Label className="text-xs">Valor (R$)</Label>
+                                <Input
+                                  type="number"
+                                  value={member.value}
+                                  onChange={(e) => updateMember("B", idx, "value", Number(e.target.value))}
+                                  placeholder="0"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => removeMember("B", idx)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button onClick={handleSave} className="w-full">
+                      Salvar Configurações
+                    </Button>
+                  </div>
+                </DialogContent>
               </Dialog>
             </div>
           )}
