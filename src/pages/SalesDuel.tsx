@@ -147,49 +147,95 @@ const SalesDuel = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!isAdmin) {
+      toast.error("Apenas administradores podem importar dados");
+      return;
+    }
+
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-
-      // Extract names from column D (D2:D11)
-      const names: string[] = [];
-      for (let i = 2; i <= 11; i++) {
-        const cellAddress = `D${i}`;
-        const cell = worksheet[cellAddress];
-        if (cell && cell.v) {
-          names.push(String(cell.v).trim());
-        }
-      }
-
-      // Extract values from column AX (AX2:AX11)
-      const values: number[] = [];
-      for (let i = 2; i <= 11; i++) {
-        const cellAddress = `AX${i}`;
-        const cell = worksheet[cellAddress];
-        if (cell && cell.v) {
-          // Convert value (e.g., 1834.7) to proper number
-          const value = typeof cell.v === 'number' ? cell.v : parseFloat(String(cell.v).replace(',', '.'));
-          values.push(value);
-        }
-      }
-
-      // Create members array
-      const importedMembers: Member[] = names.map((name, index) => ({
-        name,
-        value: values[index] || 0
-      }));
-
-      // Split members between teams (first half to team A, second half to team B)
-      const midPoint = Math.ceil(importedMembers.length / 2);
-      setTeamAMembers(importedMembers.slice(0, midPoint));
-      setTeamBMembers(importedMembers.slice(midPoint));
-
-      // Save to database after import
-      await handleSave();
       
-      toast.success(`${importedMembers.length} vendedores importados com sucesso!`);
+      // Convert sheet to JSON to access data more easily
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      // Lista fixa de vendedores na ordem correta
+      const vendedoresOrdem = [
+        "CRIZAN",
+        "UNARA", 
+        "ANDRÉ",
+        "DERINESIA",
+        "MARCELO",
+        "KARLILLA",
+        "PATRICIA",
+        "EDIVALDO",
+        "LAINA",
+        "CRISTIANE C."
+      ];
+
+      const importedMembers: Member[] = [];
+
+      // Processar linhas 1 a 10 (índices 1 a 10, pois 0 é o cabeçalho)
+      for (let i = 1; i <= 10; i++) {
+        const row = jsonData[i] as any[];
+        if (row && row[3]) { // Coluna D (índice 3)
+          // Extrair nome da coluna D (formato: "ID - NOME - Tipo")
+          const fullName = String(row[3]).trim();
+          const nameParts = fullName.split(' - ');
+          let extractedName = nameParts.length > 1 ? nameParts[1].trim() : fullName;
+          
+          // Simplificar o nome para corresponder à lista
+          if (extractedName.includes("CRIZAN")) extractedName = "CRIZAN";
+          else if (extractedName.includes("UNARA")) extractedName = "UNARA";
+          else if (extractedName.includes("ANDRÉ") || extractedName.includes("ANDRE")) extractedName = "ANDRÉ";
+          else if (extractedName.includes("DERINESIA")) extractedName = "DERINESIA";
+          else if (extractedName.includes("MARCELO")) extractedName = "MARCELO";
+          else if (extractedName.includes("KARLILLA")) extractedName = "KARLILLA";
+          else if (extractedName.includes("PATRICIA")) extractedName = "PATRICIA";
+          else if (extractedName.includes("EDIVALDO")) extractedName = "EDIVALDO";
+          else if (extractedName.includes("LAINA")) extractedName = "LAINA";
+          else if (extractedName.includes("CRISTIANE")) extractedName = "CRISTIANE C.";
+          
+          // Extrair valor da coluna "garantia" (índice 11)
+          const value = row[11] ? parseFloat(String(row[11]).replace(',', '.')) : 0;
+          
+          importedMembers.push({
+            name: extractedName,
+            value: value
+          });
+        }
+      }
+
+      // Garantir que temos exatamente 10 membros na ordem correta
+      const orderedMembers: Member[] = vendedoresOrdem.map(nome => {
+        const found = importedMembers.find(m => m.name === nome);
+        return found || { name: nome, value: 0 };
+      });
+
+      // Dividir entre equipes (primeiros 5 para A, últimos 5 para B)
+      const newTeamAMembers = orderedMembers.slice(0, 5);
+      const newTeamBMembers = orderedMembers.slice(5, 10);
+      
+      setTeamAMembers(newTeamAMembers);
+      setTeamBMembers(newTeamBMembers);
+
+      // Salvar no banco de dados
+      if (campaign) {
+        const { error } = await supabase
+          .from("sales_duel")
+          .update({
+            team_a_members: newTeamAMembers as unknown as any,
+            team_b_members: newTeamBMembers as unknown as any,
+          })
+          .eq("id", campaign.id);
+
+        if (error) throw error;
+      }
+      
+      toast.success(`10 vendedores importados e salvos com sucesso!`);
       setImportOpen(false);
+      fetchCampaign(); // Recarregar dados
       
       // Reset file input
       if (fileInputRef.current) {
