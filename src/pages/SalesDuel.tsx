@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Settings, Plus, Trash2 } from "lucide-react";
+import { Settings, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 interface Member {
   name: string;
@@ -28,7 +29,9 @@ const SalesDuel = () => {
   const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [configOpen, setConfigOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
   const [campaignName, setCampaignName] = useState("");
@@ -140,6 +143,61 @@ const SalesDuel = () => {
     }
   };
 
+  const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      // Extract names from column D (D2:D11)
+      const names: string[] = [];
+      for (let i = 2; i <= 11; i++) {
+        const cellAddress = `D${i}`;
+        const cell = worksheet[cellAddress];
+        if (cell && cell.v) {
+          names.push(String(cell.v).trim());
+        }
+      }
+
+      // Extract values from column AX (AX2:AX11)
+      const values: number[] = [];
+      for (let i = 2; i <= 11; i++) {
+        const cellAddress = `AX${i}`;
+        const cell = worksheet[cellAddress];
+        if (cell && cell.v) {
+          // Convert value (e.g., 1834.7) to proper number
+          const value = typeof cell.v === 'number' ? cell.v : parseFloat(String(cell.v).replace(',', '.'));
+          values.push(value);
+        }
+      }
+
+      // Create members array
+      const importedMembers: Member[] = names.map((name, index) => ({
+        name,
+        value: values[index] || 0
+      }));
+
+      // Split members between teams (first half to team A, second half to team B)
+      const midPoint = Math.ceil(importedMembers.length / 2);
+      setTeamAMembers(importedMembers.slice(0, midPoint));
+      setTeamBMembers(importedMembers.slice(midPoint));
+
+      toast.success(`${importedMembers.length} vendedores importados com sucesso!`);
+      setImportOpen(false);
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error("Error importing Excel:", error);
+      toast.error("Erro ao importar planilha. Verifique o formato do arquivo.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex items-center justify-center">
@@ -162,6 +220,11 @@ const SalesDuel = () => {
   const progress = Math.min((totalSales / campaign.goal_value) * 100, 100);
   const isActive = totalSales >= campaign.goal_value;
   const isTeamAWinning = teamATotal > teamBTotal;
+  const teamDifference = Math.abs(teamATotal - teamBTotal);
+
+  // Sort team members by value (descending)
+  const sortedTeamA = [...campaign.team_a_members].sort((a, b) => b.value - a.value);
+  const sortedTeamB = [...campaign.team_b_members].sort((a, b) => b.value - a.value);
 
   const allMembers = [
     ...campaign.team_a_members.map(m => ({ ...m, team: campaign.team_a_name })),
@@ -177,138 +240,46 @@ const SalesDuel = () => {
             {campaign.campaign_name}
           </h1>
           {isAdmin && (
-            <Dialog open={configOpen} onOpenChange={setConfigOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configuração
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Configurações da Campanha</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="campaignName">Nome da Campanha</Label>
-                    <Input
-                      id="campaignName"
-                      value={campaignName}
-                      onChange={(e) => setCampaignName(e.target.value)}
-                      placeholder="🔥 Duelo de Vendas 🔥"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="goalValue">Meta da Campanha (R$)</Label>
-                    <Input
-                      id="goalValue"
-                      type="number"
-                      value={goalValue}
-                      onChange={(e) => setGoalValue(Number(e.target.value))}
-                      placeholder="50000"
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="teamAName">Nome da Equipe A</Label>
-                      <Input
-                        id="teamAName"
-                        value={teamAName}
-                        onChange={(e) => setTeamAName(e.target.value)}
-                        placeholder="Equipe Fogo"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="teamBName">Nome da Equipe B</Label>
-                      <Input
-                        id="teamBName"
-                        value={teamBName}
-                        onChange={(e) => setTeamBName(e.target.value)}
-                        placeholder="Equipe Gelo"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Team A Members */}
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <Label>Integrantes - {teamAName}</Label>
-                        <Button size="sm" variant="outline" onClick={() => addMember("A")}>
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        {teamAMembers.map((member, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <Input
-                              placeholder="Nome"
-                              value={member.name}
-                              onChange={(e) => updateMember("A", idx, "name", e.target.value)}
-                            />
-                            <Input
-                              type="number"
-                              placeholder="Valor"
-                              value={member.value}
-                              onChange={(e) => updateMember("A", idx, "value", Number(e.target.value))}
-                              className="w-32"
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removeMember("A", idx)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Team B Members */}
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <Label>Integrantes - {teamBName}</Label>
-                        <Button size="sm" variant="outline" onClick={() => addMember("B")}>
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        {teamBMembers.map((member, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <Input
-                              placeholder="Nome"
-                              value={member.name}
-                              onChange={(e) => updateMember("B", idx, "name", e.target.value)}
-                            />
-                            <Input
-                              type="number"
-                              placeholder="Valor"
-                              value={member.value}
-                              onChange={(e) => updateMember("B", idx, "value", Number(e.target.value))}
-                              className="w-32"
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removeMember("B", idx)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button onClick={handleSave} className="w-full">
-                    Salvar Configurações
+            <div className="flex gap-2">
+              <Dialog open={importOpen} onOpenChange={setImportOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Importar do CCG
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Importar Planilha do CCG</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Selecione a planilha Excel com os dados dos vendedores.
+                      <br />
+                      • Nomes devem estar na coluna D (D2:D11)
+                      <br />
+                      • Valores devem estar na coluna AX (AX2:AX11)
+                    </p>
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleImportExcel}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={configOpen} onOpenChange={setConfigOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Configuração
+                  </Button>
+                </DialogTrigger>
+...
+              </Dialog>
+            </div>
           )}
         </div>
       </header>
@@ -352,7 +323,7 @@ const SalesDuel = () => {
                 {isTeamAWinning && <span className="text-2xl">🏆</span>}
               </h3>
               <div className="space-y-2 mb-4">
-                {campaign.team_a_members.map((member, idx) => (
+                {sortedTeamA.map((member, idx) => (
                   <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
                     <span>{member.name}</span>
                     <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
@@ -376,7 +347,7 @@ const SalesDuel = () => {
                 {!isTeamAWinning && teamBTotal > 0 && <span className="text-2xl">🏆</span>}
               </h3>
               <div className="space-y-2 mb-4">
-                {campaign.team_b_members.map((member, idx) => (
+                {sortedTeamB.map((member, idx) => (
                   <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
                     <span>{member.name}</span>
                     <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
@@ -390,6 +361,19 @@ const SalesDuel = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Team Difference */}
+        <section className="mb-8">
+          <div className="bg-card rounded-lg p-6 shadow-lg border text-center">
+            <h3 className="text-lg font-semibold mb-2">Diferença entre Equipes</h3>
+            <p className="text-3xl font-bold text-primary">
+              R$ {teamDifference.toLocaleString("pt-BR")}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {isTeamAWinning ? campaign.team_a_name : campaign.team_b_name} está na frente
+            </p>
           </div>
         </section>
 
