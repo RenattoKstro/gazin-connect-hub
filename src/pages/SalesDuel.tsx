@@ -160,21 +160,8 @@ const SalesDuel = () => {
       // Convert sheet to JSON to access data more easily
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-      // Lista fixa de vendedores na ordem correta
-      const vendedoresOrdem = [
-        "CRIZAN",
-        "UNARA", 
-        "ANDRÉ",
-        "DERINESIA",
-        "MARCELO",
-        "KARLILLA",
-        "PATRICIA",
-        "EDIVALDO",
-        "LAINA",
-        "CRISTIANE C."
-      ];
-
-      const importedMembers: Member[] = [];
+      // Mapa de valores importados por nome
+      const valoresImportados = new Map<string, number>();
 
       // Processar linhas 1 a 10 (índices 1 a 10, pois 0 é o cabeçalho)
       for (let i = 1; i <= 10; i++) {
@@ -185,7 +172,7 @@ const SalesDuel = () => {
           const nameParts = fullName.split(' - ');
           let extractedName = nameParts.length > 1 ? nameParts[1].trim() : fullName;
           
-          // Simplificar o nome para corresponder à lista
+          // Simplificar o nome para corresponder
           if (extractedName.includes("CRIZAN")) extractedName = "CRIZAN";
           else if (extractedName.includes("UNARA")) extractedName = "UNARA";
           else if (extractedName.includes("ANDRÉ") || extractedName.includes("ANDRE")) extractedName = "ANDRÉ";
@@ -200,40 +187,68 @@ const SalesDuel = () => {
           // Extrair valor da coluna "garantia" (índice 11)
           const value = row[11] ? parseFloat(String(row[11]).replace(',', '.')) : 0;
           
-          importedMembers.push({
-            name: extractedName,
-            value: value
-          });
+          valoresImportados.set(extractedName, value);
         }
       }
 
-      // Garantir que temos exatamente 10 membros na ordem correta
-      const orderedMembers: Member[] = vendedoresOrdem.map(nome => {
-        const found = importedMembers.find(m => m.name === nome);
-        return found || { name: nome, value: 0 };
+      // Atualizar valores das equipes mantendo a estrutura atual
+      const updatedTeamA = teamAMembers.map(member => {
+        const nomeSimplificado = member.name.toUpperCase().trim();
+        let valorEncontrado = valoresImportados.get(nomeSimplificado);
+        
+        // Tentar encontrar por correspondência parcial se não encontrou exato
+        if (valorEncontrado === undefined) {
+          for (const [nome, valor] of valoresImportados.entries()) {
+            if (nomeSimplificado.includes(nome) || nome.includes(nomeSimplificado)) {
+              valorEncontrado = valor;
+              break;
+            }
+          }
+        }
+        
+        return {
+          ...member,
+          value: valorEncontrado !== undefined ? valorEncontrado : member.value
+        };
       });
 
-      // Dividir entre equipes (primeiros 5 para A, últimos 5 para B)
-      const newTeamAMembers = orderedMembers.slice(0, 5);
-      const newTeamBMembers = orderedMembers.slice(5, 10);
-      
-      setTeamAMembers(newTeamAMembers);
-      setTeamBMembers(newTeamBMembers);
+      const updatedTeamB = teamBMembers.map(member => {
+        const nomeSimplificado = member.name.toUpperCase().trim();
+        let valorEncontrado = valoresImportados.get(nomeSimplificado);
+        
+        // Tentar encontrar por correspondência parcial se não encontrou exato
+        if (valorEncontrado === undefined) {
+          for (const [nome, valor] of valoresImportados.entries()) {
+            if (nomeSimplificado.includes(nome) || nome.includes(nomeSimplificado)) {
+              valorEncontrado = valor;
+              break;
+            }
+          }
+        }
+        
+        return {
+          ...member,
+          value: valorEncontrado !== undefined ? valorEncontrado : member.value
+        };
+      });
+
+      setTeamAMembers(updatedTeamA);
+      setTeamBMembers(updatedTeamB);
 
       // Salvar no banco de dados
       if (campaign) {
         const { error } = await supabase
           .from("sales_duel")
           .update({
-            team_a_members: newTeamAMembers as unknown as any,
-            team_b_members: newTeamBMembers as unknown as any,
+            team_a_members: updatedTeamA as unknown as any,
+            team_b_members: updatedTeamB as unknown as any,
           })
           .eq("id", campaign.id);
 
         if (error) throw error;
       }
       
-      toast.success(`10 vendedores importados e salvos com sucesso!`);
+      toast.success(`Valores importados e atualizados com sucesso!`);
       setImportOpen(false);
       fetchCampaign(); // Recarregar dados
       
