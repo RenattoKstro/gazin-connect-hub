@@ -502,12 +502,23 @@ const SalesDuel = () => {
                 {isTeamAWinning && <span className="text-2xl">🏆</span>}
               </h3>
               <div className="space-y-2 mb-4">
-                {sortedTeamA.map((member, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
-                    <span>{member.name}</span>
-                    <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
-                  </div>
-                ))}
+                {sortedTeamA.map((member, idx) => {
+                  const membersWithSales = sortedTeamA.filter(m => m.value > 0);
+                  const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
+                  const hasRanking = member.value > 0;
+                  
+                  return (
+                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm w-6">
+                          {hasRanking ? `${position + 1}º` : "-"}
+                        </span>
+                        <span>{member.name}</span>
+                      </div>
+                      <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="pt-4 border-t">
                 <div className="flex justify-between items-center text-lg font-bold">
@@ -526,12 +537,23 @@ const SalesDuel = () => {
                 {!isTeamAWinning && teamBTotal > 0 && <span className="text-2xl">🏆</span>}
               </h3>
               <div className="space-y-2 mb-4">
-                {sortedTeamB.map((member, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
-                    <span>{member.name}</span>
-                    <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
-                  </div>
-                ))}
+                {sortedTeamB.map((member, idx) => {
+                  const membersWithSales = sortedTeamB.filter(m => m.value > 0);
+                  const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
+                  const hasRanking = member.value > 0;
+                  
+                  return (
+                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm w-6">
+                          {hasRanking ? `${position + 1}º` : "-"}
+                        </span>
+                        <span>{member.name}</span>
+                      </div>
+                      <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="pt-4 border-t">
                 <div className="flex justify-between items-center text-lg font-bold">
