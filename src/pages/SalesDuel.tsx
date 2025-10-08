@@ -21,6 +21,8 @@ interface CampaignData {
   goal_value: number;
   team_a_name: string;
   team_b_name: string;
+  team_a_logo?: string;
+  team_b_logo?: string;
   team_a_members: Member[];
   team_b_members: Member[];
 }
@@ -38,6 +40,8 @@ const SalesDuel = () => {
   const [goalValue, setGoalValue] = useState(0);
   const [teamAName, setTeamAName] = useState("");
   const [teamBName, setTeamBName] = useState("");
+  const [teamALogo, setTeamALogo] = useState("");
+  const [teamBLogo, setTeamBLogo] = useState("");
   const [teamAMembers, setTeamAMembers] = useState<Member[]>([]);
   const [teamBMembers, setTeamBMembers] = useState<Member[]>([]);
 
@@ -63,6 +67,8 @@ const SalesDuel = () => {
           goal_value: Number(data.goal_value),
           team_a_name: data.team_a_name,
           team_b_name: data.team_b_name,
+          team_a_logo: data.team_a_logo,
+          team_b_logo: data.team_b_logo,
           team_a_members: (data.team_a_members as unknown as Member[]) || [],
           team_b_members: (data.team_b_members as unknown as Member[]) || [],
         };
@@ -71,6 +77,8 @@ const SalesDuel = () => {
         setGoalValue(campaignData.goal_value);
         setTeamAName(campaignData.team_a_name);
         setTeamBName(campaignData.team_b_name);
+        setTeamALogo(campaignData.team_a_logo || "");
+        setTeamBLogo(campaignData.team_b_logo || "");
         setTeamAMembers(campaignData.team_a_members);
         setTeamBMembers(campaignData.team_b_members);
       }
@@ -79,6 +87,35 @@ const SalesDuel = () => {
       toast.error("Erro ao carregar campanha");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (file: File, team: "A" | "B") => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `team_${team.toLowerCase()}_logo_${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from('tv-images')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('tv-images')
+        .getPublicUrl(filePath);
+
+      if (team === "A") {
+        setTeamALogo(publicUrl);
+      } else {
+        setTeamBLogo(publicUrl);
+      }
+
+      toast.success(`Logo da Equipe ${team} carregada com sucesso!`);
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      toast.error("Erro ao carregar logo");
     }
   };
 
@@ -97,6 +134,8 @@ const SalesDuel = () => {
             goal_value: goalValue,
             team_a_name: teamAName,
             team_b_name: teamBName,
+            team_a_logo: teamALogo,
+            team_b_logo: teamBLogo,
             team_a_members: teamAMembers as unknown as any,
             team_b_members: teamBMembers as unknown as any,
           })
@@ -358,13 +397,49 @@ const SalesDuel = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Nome da Equipe A</Label>
-                        <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Nome da Equipe A</Label>
+                          <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label>Logo da Equipe A</Label>
+                          <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleLogoUpload(file, "A");
+                            }}
+                          />
+                          {teamALogo && (
+                            <div className="mt-2">
+                              <img src={teamALogo} alt="Logo Equipe A" className="h-16 object-contain" />
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <Label>Nome da Equipe B</Label>
-                        <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Nome da Equipe B</Label>
+                          <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label>Logo da Equipe B</Label>
+                          <Input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleLogoUpload(file, "B");
+                            }}
+                          />
+                          {teamBLogo && (
+                            <div className="mt-2">
+                              <img src={teamBLogo} alt="Logo Equipe B" className="h-16 object-contain" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -497,10 +572,17 @@ const SalesDuel = () => {
             <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               isTeamAWinning ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
-              <h3 className="text-xl font-bold mb-4 flex items-center justify-between">
-                {campaign.team_a_name}
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {campaign.team_a_logo && (
+                    <img src={campaign.team_a_logo} alt={campaign.team_a_name} className="h-20 w-20 object-contain" />
+                  )}
+                  <h3 className="text-xl font-bold">
+                    {campaign.team_a_name}
+                  </h3>
+                </div>
                 {isTeamAWinning && <span className="text-2xl">🏆</span>}
-              </h3>
+              </div>
               <div className="space-y-2 mb-4">
                 {sortedTeamA.map((member, idx) => {
                   const membersWithSales = sortedTeamA.filter(m => m.value > 0);
@@ -532,10 +614,17 @@ const SalesDuel = () => {
             <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               !isTeamAWinning && teamBTotal > 0 ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
-              <h3 className="text-xl font-bold mb-4 flex items-center justify-between">
-                {campaign.team_b_name}
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {campaign.team_b_logo && (
+                    <img src={campaign.team_b_logo} alt={campaign.team_b_name} className="h-20 w-20 object-contain" />
+                  )}
+                  <h3 className="text-xl font-bold">
+                    {campaign.team_b_name}
+                  </h3>
+                </div>
                 {!isTeamAWinning && teamBTotal > 0 && <span className="text-2xl">🏆</span>}
-              </h3>
+              </div>
               <div className="space-y-2 mb-4">
                 {sortedTeamB.map((member, idx) => {
                   const membersWithSales = sortedTeamB.filter(m => m.value > 0);

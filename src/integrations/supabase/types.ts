@@ -122,8 +122,10 @@ export type Database = {
           created_at: string
           goal_value: number
           id: string
+          team_a_logo: string | null
           team_a_members: Json
           team_a_name: string
+          team_b_logo: string | null
           team_b_members: Json
           team_b_name: string
           updated_at: string
@@ -133,8 +135,10 @@ export type Database = {
           created_at?: string
           goal_value?: number
           id?: string
+          team_a_logo?: string | null
           team_a_members?: Json
           team_a_name?: string
+          team_b_logo?: string | null
           team_b_members?: Json
           team_b_name?: string
           updated_at?: string
@@ -144,8 +148,10 @@ export type Database = {
           created_at?: string
           goal_value?: number
           id?: string
+          team_a_logo?: string | null
           team_a_members?: Json
           team_a_name?: string
+          team_b_logo?: string | null
           team_b_members?: Json
           team_b_name?: string
           updated_at?: string
