@@ -184,8 +184,8 @@ const SalesDuel = () => {
           else if (extractedName.includes("LAINA")) extractedName = "LAINA";
           else if (extractedName.includes("CRISTIANE")) extractedName = "CRISTIANE C.";
           
-          // Extrair valor da coluna "garantia" (índice 11)
-          const value = row[11] ? parseFloat(String(row[11]).replace(',', '.')) : 0;
+          // Extrair valor da coluna AX "vendaservicos" (índice 49)
+          const value = row[49] ? parseFloat(String(row[49]).replace(',', '.')) : 0;
           
           valoresImportados.set(extractedName, value);
         }
@@ -561,30 +561,41 @@ const SalesDuel = () => {
           <h2 className="text-2xl font-bold mb-4">🏅 Ranking Geral</h2>
           <div className="bg-card rounded-lg p-6 shadow-lg border">
             <div className="space-y-3">
-              {allMembers.map((member, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                    idx === 0 ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50" :
-                    idx === 1 ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/50" :
-                    idx === 2 ? "bg-gradient-to-r from-orange-600/20 to-orange-700/20 border border-orange-600/50" :
-                    "bg-background"
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl font-bold w-8">
-                      {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}º`}
-                    </span>
-                    <div>
-                      <p className="font-semibold">{member.name}</p>
-                      <p className="text-sm text-muted-foreground">{member.team}</p>
+              {allMembers.map((member, idx) => {
+                // Calcular posição apenas para quem tem vendas
+                const membersWithSales = allMembers.filter(m => m.value > 0);
+                const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
+                const hasRanking = member.value > 0;
+                
+                return (
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                      position === 0 ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50" :
+                      position === 1 ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/50" :
+                      position === 2 ? "bg-gradient-to-r from-orange-600/20 to-orange-700/20 border border-orange-600/50" :
+                      "bg-background"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl font-bold w-8">
+                        {hasRanking ? (
+                          position === 0 ? "🥇" : position === 1 ? "🥈" : position === 2 ? "🥉" : `${position + 1}º`
+                        ) : (
+                          "-"
+                        )}
+                      </span>
+                      <div>
+                        <p className="font-semibold">{member.name}</p>
+                        <p className="text-sm text-muted-foreground">{member.team}</p>
+                      </div>
                     </div>
+                    <span className="text-xl font-bold text-primary">
+                      R$ {member.value.toLocaleString("pt-BR")}
+                    </span>
                   </div>
-                  <span className="text-xl font-bold text-primary">
-                    R$ {member.value.toLocaleString("pt-BR")}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
