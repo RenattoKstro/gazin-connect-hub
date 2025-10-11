@@ -209,37 +209,37 @@ const SalesDuel = () => {
           // Extrair nome da coluna D (formato: "ID - NOME - Tipo")
           const fullName = String(row[3]).trim();
           const nameParts = fullName.split(' - ');
-          let extractedName = nameParts.length > 1 ? nameParts[1].trim() : fullName;
-          
-          // Simplificar o nome para corresponder
-          if (extractedName.includes("CRIZAN")) extractedName = "CRIZAN";
-          else if (extractedName.includes("UNARA")) extractedName = "UNARA";
-          else if (extractedName.includes("ANDRÉ") || extractedName.includes("ANDRE")) extractedName = "ANDRÉ";
-          else if (extractedName.includes("DERINESIA")) extractedName = "DERINESIA";
-          else if (extractedName.includes("MARCELO")) extractedName = "MARCELO";
-          else if (extractedName.includes("KARLILLA")) extractedName = "KARLILLA";
-          else if (extractedName.includes("PATRICIA")) extractedName = "PATRICIA";
-          else if (extractedName.includes("EDIVALDO")) extractedName = "EDIVALDO";
-          else if (extractedName.includes("LAINA")) extractedName = "LAINA";
-          else if (extractedName.includes("CRISTIANE")) extractedName = "CRISTIANE C.";
+          let extractedName = nameParts.length > 1 ? nameParts[1].trim().toUpperCase() : fullName.toUpperCase();
           
           // Extrair valor da coluna AX "vendaservicos" (índice 49)
           const value = row[49] ? parseFloat(String(row[49]).replace(',', '.')) : 0;
           
+          // Salvar o nome completo extraído do Excel
           valoresImportados.set(extractedName, value);
         }
       }
 
       // Atualizar valores das equipes mantendo a estrutura atual
       const updatedTeamA = teamAMembers.map(member => {
-        const nomeSimplificado = member.name.toUpperCase().trim();
-        let valorEncontrado = valoresImportados.get(nomeSimplificado);
+        const nomeMembro = member.name.toUpperCase().trim();
+        let valorEncontrado = valoresImportados.get(nomeMembro);
         
         // Tentar encontrar por correspondência parcial se não encontrou exato
         if (valorEncontrado === undefined) {
-          for (const [nome, valor] of valoresImportados.entries()) {
-            if (nomeSimplificado.includes(nome) || nome.includes(nomeSimplificado)) {
+          for (const [nomeExcel, valor] of valoresImportados.entries()) {
+            // Verificar se o nome do Excel contém o nome do membro ou vice-versa
+            // Também verifica palavras-chave principais
+            const palavrasMembro = nomeMembro.split(' ').filter(p => p.length > 2);
+            const palavrasExcel = nomeExcel.split(' ').filter(p => p.length > 2);
+            
+            // Verifica se há correspondência de palavras significativas
+            const hasMatch = palavrasMembro.some(pm => 
+              palavrasExcel.some(pe => pe.includes(pm) || pm.includes(pe))
+            );
+            
+            if (hasMatch) {
               valorEncontrado = valor;
+              console.log(`Match encontrado: "${nomeMembro}" <-> "${nomeExcel}" = R$ ${valor}`);
               break;
             }
           }
@@ -252,14 +252,25 @@ const SalesDuel = () => {
       });
 
       const updatedTeamB = teamBMembers.map(member => {
-        const nomeSimplificado = member.name.toUpperCase().trim();
-        let valorEncontrado = valoresImportados.get(nomeSimplificado);
+        const nomeMembro = member.name.toUpperCase().trim();
+        let valorEncontrado = valoresImportados.get(nomeMembro);
         
         // Tentar encontrar por correspondência parcial se não encontrou exato
         if (valorEncontrado === undefined) {
-          for (const [nome, valor] of valoresImportados.entries()) {
-            if (nomeSimplificado.includes(nome) || nome.includes(nomeSimplificado)) {
+          for (const [nomeExcel, valor] of valoresImportados.entries()) {
+            // Verificar se o nome do Excel contém o nome do membro ou vice-versa
+            // Também verifica palavras-chave principais
+            const palavrasMembro = nomeMembro.split(' ').filter(p => p.length > 2);
+            const palavrasExcel = nomeExcel.split(' ').filter(p => p.length > 2);
+            
+            // Verifica se há correspondência de palavras significativas
+            const hasMatch = palavrasMembro.some(pm => 
+              palavrasExcel.some(pe => pe.includes(pm) || pm.includes(pe))
+            );
+            
+            if (hasMatch) {
               valorEncontrado = valor;
+              console.log(`Match encontrado: "${nomeMembro}" <-> "${nomeExcel}" = R$ ${valor}`);
               break;
             }
           }
@@ -542,10 +553,10 @@ const SalesDuel = () => {
         {/* Campaign Goal */}
         <section className="mb-8">
           <div className="bg-card rounded-lg p-6 shadow-lg border">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-xl font-semibold mb-2">Meta da Campanha</h2>
-                <p className="text-3xl font-bold">
+                <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
+                <p className="text-5xl font-bold text-primary mb-2">
                   R$ {campaign.goal_value.toLocaleString("pt-BR")}
                 </p>
               </div>
@@ -555,10 +566,24 @@ const SalesDuel = () => {
                 {isActive ? "✅ Campanha Ativa" : "❌ Aguardando Gatilho"}
               </div>
             </div>
-            <div className="space-y-2">
-              <Progress value={progress} className="h-4" />
-              <p className="text-sm text-muted-foreground text-right">
-                R$ {totalSales.toLocaleString("pt-BR")} de R$ {campaign.goal_value.toLocaleString("pt-BR")} ({progress.toFixed(1)}%)
+            <div className="space-y-3">
+              <Progress value={progress} className="h-6" />
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor Atual</p>
+                  <p className="text-3xl font-bold">
+                    R$ {totalSales.toLocaleString("pt-BR")}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Faltam</p>
+                  <p className="text-3xl font-bold text-orange-500">
+                    R$ {Math.max(0, campaign.goal_value - totalSales).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground text-center pt-2">
+                Progresso: {progress.toFixed(1)}%
               </p>
             </div>
           </div>
