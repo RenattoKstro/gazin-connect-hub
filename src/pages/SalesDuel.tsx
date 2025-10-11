@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Settings, Plus, Trash2, Upload, Printer } from "lucide-react";
+import { Settings, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import html2canvas from "html2canvas";
 
 interface Member {
   name: string;
@@ -34,9 +33,7 @@ const SalesDuel = () => {
   const [configOpen, setConfigOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
-  const [isPrinting, setIsPrinting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const printAreaRef = useRef<HTMLDivElement>(null);
 
   // Form states
   const [campaignName, setCampaignName] = useState("");
@@ -316,27 +313,25 @@ const SalesDuel = () => {
   };
 
   const handlePrint = async () => {
-    if (!printAreaRef.current) return;
+    if (!contentRef.current) return;
 
     try {
       setIsPrinting(true);
       toast.info("Capturando tela...");
 
-      // Aguarda um momento para os elementos serem ocultados
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const canvas = await html2canvas(printAreaRef.current, {
+      const html2canvas = (await import("html2canvas")).default;
+      
+      const canvas = await html2canvas(contentRef.current, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         width: 1920,
         height: 1080,
-        windowWidth: 1920,
-        windowHeight: 1080,
       });
 
-      // Converte para imagem e faz download
       const link = document.createElement("a");
       link.download = `duelo-${campaign?.campaign_name || "campanha"}-${new Date().toISOString().split('T')[0]}.png`;
       link.href = canvas.toDataURL("image/png");
@@ -385,7 +380,7 @@ const SalesDuel = () => {
   ].sort((a, b) => b.value - a.value);
 
   return (
-    <div ref={printAreaRef} className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -393,7 +388,7 @@ const SalesDuel = () => {
             {campaign.campaign_name}
           </h1>
           {isAdmin && (
-            <div className={`flex gap-2 ${isPrinting ? "hidden" : ""}`}>
+            <div className="flex gap-2">
               <Dialog open={importOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -583,11 +578,6 @@ const SalesDuel = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="mr-2 h-4 w-4" />
-                PRINT
-              </Button>
             </div>
           )}
         </div>
