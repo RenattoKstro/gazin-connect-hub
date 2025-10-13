@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Settings, Plus, Trash2, Upload } from "lucide-react";
+import { Settings, Plus, Trash2, Upload, Printer } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import spartaVsAguiaImage from "@/assets/sparta-vs-aguia.jpg";
@@ -395,6 +395,15 @@ const SalesDuel = () => {
           </h1>
           {isAdmin && (
             <div className="flex flex-wrap gap-2 justify-center">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.print()}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimir
+              </Button>
+              
               <Dialog open={importOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
