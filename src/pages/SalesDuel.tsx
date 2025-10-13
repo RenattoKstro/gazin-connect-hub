@@ -332,7 +332,7 @@ const SalesDuel = () => {
         <meta name="description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
         <meta property="og:title" content={`${campaign.campaign_name} - Duelo de Vendas`} />
         <meta property="og:description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
-        <meta property="og:image" content="https://gazinassisbrasil.shop/imagens/duelo-preview.jpg" />
+        <meta property="og:image" content="https://gazinassisbrasil.shop/vs.jpg" />
         <meta property="og:image:alt" content="Preview do Duelo de Vendas" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -341,7 +341,7 @@ const SalesDuel = () => {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${campaign.campaign_name} - Duelo de Vendas`} />
         <meta name="twitter:description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
-        <meta name="twitter:image" content="https://gazinassisbrasil.shop/imagens/duelo-preview.jpg" />
+        <meta name="twitter:image" content="https://gazinassisbrasil.shop/vs.jpg" />
       </Helmet>
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
