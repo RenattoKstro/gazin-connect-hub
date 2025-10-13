@@ -36,6 +36,44 @@ const SalesDuel = () => {
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Set Open Graph meta tags for social sharing
+  useEffect(() => {
+    const currentUrl = window.location.href;
+    const previewImage = `${window.location.origin}/sparta-vs-aguia-preview.jpg`;
+    
+    // Update meta tags
+    document.title = campaign ? `${campaign.campaign_name} - Gazin Assis Brasil` : 'Duelo de Vendas';
+    
+    const metaTags = [
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: currentUrl },
+      { property: 'og:title', content: 'Duelo de Vendas - Sparta vs Águia Velozes' },
+      { property: 'og:description', content: 'Acompanhe o duelo de vendas entre as equipes Sparta e Águia Velozes!' },
+      { property: 'og:image', content: previewImage },
+      { property: 'og:image:width', content: '1200' },
+      { property: 'og:image:height', content: '630' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:url', content: currentUrl },
+      { name: 'twitter:title', content: 'Duelo de Vendas - Sparta vs Águia Velozes' },
+      { name: 'twitter:description', content: 'Acompanhe o duelo de vendas entre as equipes!' },
+      { name: 'twitter:image', content: previewImage },
+    ];
+
+    metaTags.forEach(tag => {
+      const attr = tag.property ? 'property' : 'name';
+      const value = tag.property || tag.name;
+      let element = document.querySelector(`meta[${attr}="${value}"]`);
+      
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute(attr, value || '');
+        document.head.appendChild(element);
+      }
+      
+      element.setAttribute('content', tag.content);
+    });
+  }, [campaign]);
+
   // Form states
   const [campaignName, setCampaignName] = useState("");
   const [goalValue, setGoalValue] = useState(0);
