@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +38,6 @@ const SalesDuel = () => {
   const [isPrinting, setIsPrinting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const printAreaRef = useRef<HTMLDivElement>(null);
-
   // Form states
   const [campaignName, setCampaignName] = useState("");
   const [goalValue, setGoalValue] = useState(0);
@@ -60,9 +60,7 @@ const SalesDuel = () => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-
       if (error) throw error;
-
       if (data) {
         const campaignData: CampaignData = {
           id: data.id,
@@ -98,23 +96,18 @@ const SalesDuel = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `team_${team.toLowerCase()}_logo_${Date.now()}.${fileExt}`;
       const filePath = fileName;
-
       const { error: uploadError } = await supabase.storage
         .from('tv-images')
         .upload(filePath, file, { upsert: true });
-
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage
         .from('tv-images')
         .getPublicUrl(filePath);
-
       if (team === "A") {
         setTeamALogo(publicUrl);
       } else {
         setTeamBLogo(publicUrl);
       }
-
       toast.success(`Logo da Equipe ${team} carregada com sucesso!`);
     } catch (error) {
       console.error("Error uploading logo:", error);
@@ -127,7 +120,6 @@ const SalesDuel = () => {
       toast.error("Apenas administradores podem salvar configurações");
       return;
     }
-
     try {
       if (campaign) {
         const { error } = await supabase
@@ -143,10 +135,8 @@ const SalesDuel = () => {
             team_b_members: teamBMembers as unknown as any,
           })
           .eq("id", campaign.id);
-
         if (error) throw error;
       }
-
       toast.success("Configurações salvas com sucesso!");
       setConfigOpen(false);
       fetchCampaign();
@@ -188,58 +178,36 @@ const SalesDuel = () => {
   const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     if (!isAdmin) {
       toast.error("Apenas administradores podem importar dados");
       return;
     }
-
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      
-      // Convert sheet to JSON to access data more easily
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      // Mapa de valores importados por nome
       const valoresImportados = new Map<string, number>();
-
-      // Processar linhas 1 a 10 (índices 1 a 10, pois 0 é o cabeçalho)
       for (let i = 1; i <= 10; i++) {
         const row = jsonData[i] as any[];
-        if (row && row[3]) { // Coluna D (índice 3)
-          // Extrair nome da coluna D (formato: "ID - NOME - Tipo")
+        if (row && row[3]) {
           const fullName = String(row[3]).trim();
           const nameParts = fullName.split(' - ');
           let extractedName = nameParts.length > 1 ? nameParts[1].trim().toUpperCase() : fullName.toUpperCase();
-          
-          // Extrair valor da coluna AX "vendaservicos" (índice 49)
           const value = row[49] ? parseFloat(String(row[49]).replace(',', '.')) : 0;
-          
-          // Salvar o nome completo extraído do Excel
           valoresImportados.set(extractedName, value);
         }
       }
-
-      // Atualizar valores das equipes mantendo a estrutura atual
       const updatedTeamA = teamAMembers.map(member => {
         const nomeMembro = member.name.toUpperCase().trim();
         let valorEncontrado = valoresImportados.get(nomeMembro);
-        
-        // Tentar encontrar por correspondência parcial se não encontrou exato
         if (valorEncontrado === undefined) {
           for (const [nomeExcel, valor] of valoresImportados.entries()) {
-            // Verificar se o nome do Excel contém o nome do membro ou vice-versa
-            // Também verifica palavras-chave principais
             const palavrasMembro = nomeMembro.split(' ').filter(p => p.length > 2);
             const palavrasExcel = nomeExcel.split(' ').filter(p => p.length > 2);
-            
-            // Verifica se há correspondência de palavras significativas
-            const hasMatch = palavrasMembro.some(pm => 
+            const hasMatch = palavrasMembro.some(pm =>
               palavrasExcel.some(pe => pe.includes(pm) || pm.includes(pe))
             );
-            
             if (hasMatch) {
               valorEncontrado = valor;
               console.log(`Match encontrado: "${nomeMembro}" <-> "${nomeExcel}" = R$ ${valor}`);
@@ -247,30 +215,21 @@ const SalesDuel = () => {
             }
           }
         }
-        
         return {
           ...member,
           value: valorEncontrado !== undefined ? valorEncontrado : member.value
         };
       });
-
       const updatedTeamB = teamBMembers.map(member => {
         const nomeMembro = member.name.toUpperCase().trim();
         let valorEncontrado = valoresImportados.get(nomeMembro);
-        
-        // Tentar encontrar por correspondência parcial se não encontrou exato
         if (valorEncontrado === undefined) {
           for (const [nomeExcel, valor] of valoresImportados.entries()) {
-            // Verificar se o nome do Excel contém o nome do membro ou vice-versa
-            // Também verifica palavras-chave principais
             const palavrasMembro = nomeMembro.split(' ').filter(p => p.length > 2);
             const palavrasExcel = nomeExcel.split(' ').filter(p => p.length > 2);
-            
-            // Verifica se há correspondência de palavras significativas
-            const hasMatch = palavrasMembro.some(pm => 
+            const hasMatch = palavrasMembro.some(pm =>
               palavrasExcel.some(pe => pe.includes(pm) || pm.includes(pe))
             );
-            
             if (hasMatch) {
               valorEncontrado = valor;
               console.log(`Match encontrado: "${nomeMembro}" <-> "${nomeExcel}" = R$ ${valor}`);
@@ -278,17 +237,13 @@ const SalesDuel = () => {
             }
           }
         }
-        
         return {
           ...member,
           value: valorEncontrado !== undefined ? valorEncontrado : member.value
         };
       });
-
       setTeamAMembers(updatedTeamA);
       setTeamBMembers(updatedTeamB);
-
-      // Salvar no banco de dados
       if (campaign) {
         const { error } = await supabase
           .from("sales_duel")
@@ -297,15 +252,11 @@ const SalesDuel = () => {
             team_b_members: updatedTeamB as unknown as any,
           })
           .eq("id", campaign.id);
-
         if (error) throw error;
       }
-      
       toast.success(`Valores importados e atualizados com sucesso!`);
       setImportOpen(false);
-      fetchCampaign(); // Recarregar dados
-      
-      // Reset file input
+      fetchCampaign();
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -317,14 +268,10 @@ const SalesDuel = () => {
 
   const handlePrint = async () => {
     if (!printAreaRef.current) return;
-
     try {
       setIsPrinting(true);
       toast.info("Capturando tela...");
-
-      // Aguarda um momento para os elementos serem ocultados
       await new Promise(resolve => setTimeout(resolve, 100));
-
       const canvas = await html2canvas(printAreaRef.current, {
         scale: 2,
         useCORS: true,
@@ -335,13 +282,10 @@ const SalesDuel = () => {
         windowWidth: 1920,
         windowHeight: 1080,
       });
-
-      // Converte para imagem e faz download
       const link = document.createElement("a");
       link.download = `duelo-${campaign?.campaign_name || "campanha"}-${new Date().toISOString().split('T')[0]}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
-
       toast.success("Captura realizada com sucesso!");
     } catch (error) {
       console.error("Error printing:", error);
@@ -374,11 +318,8 @@ const SalesDuel = () => {
   const isActive = totalSales >= campaign.goal_value;
   const isTeamAWinning = teamATotal > teamBTotal;
   const teamDifference = Math.abs(teamATotal - teamBTotal);
-
-  // Sort team members by value (descending)
   const sortedTeamA = [...campaign.team_a_members].sort((a, b) => b.value - a.value);
   const sortedTeamB = [...campaign.team_b_members].sort((a, b) => b.value - a.value);
-
   const allMembers = [
     ...campaign.team_a_members.map(m => ({ ...m, team: campaign.team_a_name })),
     ...campaign.team_b_members.map(m => ({ ...m, team: campaign.team_b_name }))
@@ -386,7 +327,22 @@ const SalesDuel = () => {
 
   return (
     <div ref={printAreaRef} className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
-      {/* Header */}
+      <Helmet>
+        <title>{campaign.campaign_name} - Duelo de Vendas</title>
+        <meta name="description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
+        <meta property="og:title" content={`${campaign.campaign_name} - Duelo de Vendas`} />
+        <meta property="og:description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
+        <meta property="og:image" content="https://gazinassisbrasil.shop/imagens/duelo-preview.jpg" />
+        <meta property="og:image:alt" content="Preview do Duelo de Vendas" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:url" content="https://gazinassisbrasil.shop/duelo" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${campaign.campaign_name} - Duelo de Vendas`} />
+        <meta name="twitter:description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
+        <meta name="twitter:image" content="https://gazinassisbrasil.shop/imagens/duelo-preview.jpg" />
+      </Helmet>
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
@@ -422,7 +378,6 @@ const SalesDuel = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-              
               <Dialog open={configOpen} onOpenChange={setConfigOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -445,7 +400,6 @@ const SalesDuel = () => {
                         <Input type="number" value={goalValue} onChange={(e) => setGoalValue(Number(e.target.value))} />
                       </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-4">
                         <div>
@@ -454,8 +408,8 @@ const SalesDuel = () => {
                         </div>
                         <div>
                           <Label>Logo da Equipe A</Label>
-                          <Input 
-                            type="file" 
+                          <Input
+                            type="file"
                             accept="image/*"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
@@ -476,8 +430,8 @@ const SalesDuel = () => {
                         </div>
                         <div>
                           <Label>Logo da Equipe B</Label>
-                          <Input 
-                            type="file" 
+                          <Input
+                            type="file"
                             accept="image/*"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
@@ -492,7 +446,6 @@ const SalesDuel = () => {
                         </div>
                       </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <div className="flex justify-between items-center mb-2">
@@ -534,7 +487,6 @@ const SalesDuel = () => {
                           ))}
                         </div>
                       </div>
-
                       <div>
                         <div className="flex justify-between items-center mb-2">
                           <Label>Integrantes da Equipe B</Label>
@@ -576,14 +528,12 @@ const SalesDuel = () => {
                         </div>
                       </div>
                     </div>
-
                     <Button onClick={handleSave} className="w-full">
                       Salvar Configurações
                     </Button>
                   </div>
                 </DialogContent>
               </Dialog>
-
               <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="mr-2 h-4 w-4" />
                 PRINT
@@ -592,9 +542,7 @@ const SalesDuel = () => {
           )}
         </div>
       </header>
-
       <main className="container mx-auto px-4 py-8">
-        {/* Campaign Goal */}
         <section className="mb-8">
           <div className="bg-card rounded-lg p-6 shadow-lg border">
             <div className="flex justify-between items-center mb-6">
@@ -632,12 +580,9 @@ const SalesDuel = () => {
             </div>
           </div>
         </section>
-
-        {/* Teams */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Equipes</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Team A */}
             <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               isTeamAWinning ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
@@ -657,7 +602,6 @@ const SalesDuel = () => {
                   const membersWithSales = sortedTeamA.filter(m => m.value > 0);
                   const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
                   const hasRanking = member.value > 0;
-                  
                   return (
                     <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
                       <div className="flex items-center gap-2">
@@ -678,8 +622,6 @@ const SalesDuel = () => {
                 </div>
               </div>
             </div>
-
-            {/* Team B */}
             <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               !isTeamAWinning && teamBTotal > 0 ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
@@ -699,7 +641,6 @@ const SalesDuel = () => {
                   const membersWithSales = sortedTeamB.filter(m => m.value > 0);
                   const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
                   const hasRanking = member.value > 0;
-                  
                   return (
                     <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
                       <div className="flex items-center gap-2">
@@ -722,8 +663,6 @@ const SalesDuel = () => {
             </div>
           </div>
         </section>
-
-        {/* Team Difference */}
         <section className="mb-8">
           <div className="bg-card rounded-lg p-6 shadow-lg border text-center">
             <h3 className="text-lg font-semibold mb-2">Diferença entre Equipes</h3>
@@ -735,18 +674,14 @@ const SalesDuel = () => {
             </p>
           </div>
         </section>
-
-        {/* Ranking */}
         <section>
           <h2 className="text-2xl font-bold mb-4">🏅 Ranking Geral</h2>
           <div className="bg-card rounded-lg p-6 shadow-lg border">
             <div className="space-y-3">
               {allMembers.map((member, idx) => {
-                // Calcular posição apenas para quem tem vendas
                 const membersWithSales = allMembers.filter(m => m.value > 0);
                 const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
                 const hasRanking = member.value > 0;
-                
                 return (
                   <div
                     key={idx}
