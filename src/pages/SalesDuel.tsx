@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Settings, Plus, Trash2, Upload, Printer } from "lucide-react";
+import { Settings, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import spartaVsAguiaImage from "@/assets/sparta-vs-aguia.jpg";
 
 interface Member {
   name: string;
@@ -35,44 +34,6 @@ const SalesDuel = () => {
   const [importOpen, setImportOpen] = useState(false);
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Set Open Graph meta tags for social sharing
-  useEffect(() => {
-    const currentUrl = window.location.href;
-    const previewImage = `${window.location.origin}/sparta-vs-aguia-preview.jpg`;
-    
-    // Update meta tags
-    document.title = campaign ? `${campaign.campaign_name} - Gazin Assis Brasil` : 'Duelo de Vendas';
-    
-    const metaTags = [
-      { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: currentUrl },
-      { property: 'og:title', content: 'Duelo de Vendas - Sparta vs Águia Velozes' },
-      { property: 'og:description', content: 'Acompanhe o duelo de vendas entre as equipes Sparta e Águia Velozes!' },
-      { property: 'og:image', content: previewImage },
-      { property: 'og:image:width', content: '1200' },
-      { property: 'og:image:height', content: '630' },
-      { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:url', content: currentUrl },
-      { name: 'twitter:title', content: 'Duelo de Vendas - Sparta vs Águia Velozes' },
-      { name: 'twitter:description', content: 'Acompanhe o duelo de vendas entre as equipes!' },
-      { name: 'twitter:image', content: previewImage },
-    ];
-
-    metaTags.forEach(tag => {
-      const attr = tag.property ? 'property' : 'name';
-      const value = tag.property || tag.name;
-      let element = document.querySelector(`meta[${attr}="${value}"]`);
-      
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attr, value || '');
-        document.head.appendChild(element);
-      }
-      
-      element.setAttribute('content', tag.content);
-    });
-  }, [campaign]);
 
   // Form states
   const [campaignName, setCampaignName] = useState("");
@@ -351,6 +312,39 @@ const SalesDuel = () => {
     }
   };
 
+  const handlePrint = async () => {
+    if (!contentRef.current) return;
+
+    try {
+      setIsPrinting(true);
+      toast.info("Capturando tela...");
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const html2canvas = (await import("html2canvas")).default;
+      
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        width: 1920,
+        height: 1080,
+      });
+
+      const link = document.createElement("a");
+      link.download = `duelo-${campaign?.campaign_name || "campanha"}-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+
+      toast.success("Captura realizada com sucesso!");
+    } catch (error) {
+      console.error("Error printing:", error);
+      toast.error("Erro ao capturar tela");
+    } finally {
+      setIsPrinting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -389,21 +383,12 @@ const SalesDuel = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent text-center sm:text-left">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
             {campaign.campaign_name}
           </h1>
           {isAdmin && (
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.print()}
-              >
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir
-              </Button>
-              
+            <div className="flex gap-2">
               <Dialog open={importOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -598,81 +583,64 @@ const SalesDuel = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <main className="container mx-auto px-4 py-8">
         {/* Campaign Goal */}
         <section className="mb-8">
-          <div className="bg-card rounded-lg p-4 sm:p-6 shadow-lg border">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
+          <div className="bg-card rounded-lg p-6 shadow-lg border">
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Meta da Campanha</h2>
-                <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2">
+                <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
+                <p className="text-5xl font-bold text-primary mb-2">
                   R$ {campaign.goal_value.toLocaleString("pt-BR")}
                 </p>
               </div>
-              <div className={`text-sm sm:text-base md:text-lg font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full ${
+              <div className={`text-lg font-semibold px-4 py-2 rounded-full ${
                 isActive ? "bg-green-500/20 text-green-600" : "bg-red-500/20 text-red-600"
               }`}>
                 {isActive ? "✅ Campanha Ativa" : "❌ Aguardando Gatilho"}
               </div>
             </div>
             <div className="space-y-3">
-              <Progress value={progress} className="h-4 sm:h-6" />
-              <div className="grid grid-cols-2 gap-4">
+              <Progress value={progress} className="h-6" />
+              <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Valor Atual</p>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold">
+                  <p className="text-sm text-muted-foreground">Valor Atual</p>
+                  <p className="text-3xl font-bold">
                     R$ {totalSales.toLocaleString("pt-BR")}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs sm:text-sm text-muted-foreground">Faltam</p>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-500">
+                  <p className="text-sm text-muted-foreground">Faltam</p>
+                  <p className="text-3xl font-bold text-orange-500">
                     R$ {Math.max(0, campaign.goal_value - totalSales).toLocaleString("pt-BR")}
                   </p>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm text-muted-foreground text-center pt-2">
+              <p className="text-sm text-muted-foreground text-center pt-2">
                 Progresso: {progress.toFixed(1)}%
               </p>
             </div>
           </div>
         </section>
 
-        {/* Teams Preview Image */}
-        <section className="mb-8">
-          <div className="flex justify-center">
-            <div className="relative max-w-2xl w-full">
-              <img 
-                src={spartaVsAguiaImage} 
-                alt="Sparta vs Aguia Velozes" 
-                className="w-full h-auto rounded-lg shadow-2xl border-2 border-primary/20"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent rounded-lg pointer-events-none" />
-            </div>
-          </div>
-          <p className="text-center mt-4 text-lg sm:text-xl md:text-2xl font-bold">
-            {campaign.team_a_name} vs {campaign.team_b_name}
-          </p>
-        </section>
-
         {/* Teams */}
         <section className="mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center sm:text-left">Equipes</h2>
-          <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+          <h2 className="text-2xl font-bold mb-4">Equipes</h2>
+          <div className="grid md:grid-cols-2 gap-6">
             {/* Team A */}
-            <div className={`bg-card rounded-lg p-4 sm:p-6 shadow-lg border-2 transition-all ${
+            <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               isTeamAWinning ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
-              <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-                <div className="flex items-center gap-2 sm:gap-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
                   {campaign.team_a_logo && (
-                    <img src={campaign.team_a_logo} alt={campaign.team_a_name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain" />
+                    <img src={campaign.team_a_logo} alt={campaign.team_a_name} className="h-20 w-20 object-contain" />
                   )}
-                  <h3 className="text-lg sm:text-xl font-bold text-center sm:text-left">
+                  <h3 className="text-xl font-bold">
                     {campaign.team_a_name}
                   </h3>
                 </div>
-                {isTeamAWinning && <span className="text-xl sm:text-2xl">🏆</span>}
+                {isTeamAWinning && <span className="text-2xl">🏆</span>}
               </div>
               <div className="space-y-2 mb-4">
                 {sortedTeamA.map((member, idx) => {
@@ -681,20 +649,20 @@ const SalesDuel = () => {
                   const hasRanking = member.value > 0;
                   
                   return (
-                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded text-sm sm:text-base">
+                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs sm:text-sm w-6 sm:w-8">
+                        <span className="font-bold text-sm w-6">
                           {hasRanking ? `${position + 1}º` : "-"}
                         </span>
-                        <span className="truncate max-w-[150px] sm:max-w-none">{member.name}</span>
+                        <span>{member.name}</span>
                       </div>
-                      <span className="font-semibold whitespace-nowrap">R$ {member.value.toLocaleString("pt-BR")}</span>
+                      <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
                     </div>
                   );
                 })}
               </div>
               <div className="pt-4 border-t">
-                <div className="flex justify-between items-center text-base sm:text-lg font-bold">
+                <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total:</span>
                   <span className="text-primary">R$ {teamATotal.toLocaleString("pt-BR")}</span>
                 </div>
@@ -702,19 +670,19 @@ const SalesDuel = () => {
             </div>
 
             {/* Team B */}
-            <div className={`bg-card rounded-lg p-4 sm:p-6 shadow-lg border-2 transition-all ${
+            <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               !isTeamAWinning && teamBTotal > 0 ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
-              <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-                <div className="flex items-center gap-2 sm:gap-4">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
                   {campaign.team_b_logo && (
-                    <img src={campaign.team_b_logo} alt={campaign.team_b_name} className="h-12 w-12 sm:h-20 sm:w-20 object-contain" />
+                    <img src={campaign.team_b_logo} alt={campaign.team_b_name} className="h-20 w-20 object-contain" />
                   )}
-                  <h3 className="text-lg sm:text-xl font-bold text-center sm:text-left">
+                  <h3 className="text-xl font-bold">
                     {campaign.team_b_name}
                   </h3>
                 </div>
-                {!isTeamAWinning && teamBTotal > 0 && <span className="text-xl sm:text-2xl">🏆</span>}
+                {!isTeamAWinning && teamBTotal > 0 && <span className="text-2xl">🏆</span>}
               </div>
               <div className="space-y-2 mb-4">
                 {sortedTeamB.map((member, idx) => {
@@ -723,20 +691,20 @@ const SalesDuel = () => {
                   const hasRanking = member.value > 0;
                   
                   return (
-                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded text-sm sm:text-base">
+                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs sm:text-sm w-6 sm:w-8">
+                        <span className="font-bold text-sm w-6">
                           {hasRanking ? `${position + 1}º` : "-"}
                         </span>
-                        <span className="truncate max-w-[150px] sm:max-w-none">{member.name}</span>
+                        <span>{member.name}</span>
                       </div>
-                      <span className="font-semibold whitespace-nowrap">R$ {member.value.toLocaleString("pt-BR")}</span>
+                      <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
                     </div>
                   );
                 })}
               </div>
               <div className="pt-4 border-t">
-                <div className="flex justify-between items-center text-base sm:text-lg font-bold">
+                <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total:</span>
                   <span className="text-primary">R$ {teamBTotal.toLocaleString("pt-BR")}</span>
                 </div>
@@ -747,12 +715,12 @@ const SalesDuel = () => {
 
         {/* Team Difference */}
         <section className="mb-8">
-          <div className="bg-card rounded-lg p-4 sm:p-6 shadow-lg border text-center">
-            <h3 className="text-base sm:text-lg font-semibold mb-2">Diferença entre Equipes</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-primary">
+          <div className="bg-card rounded-lg p-6 shadow-lg border text-center">
+            <h3 className="text-lg font-semibold mb-2">Diferença entre Equipes</h3>
+            <p className="text-3xl font-bold text-primary">
               R$ {teamDifference.toLocaleString("pt-BR")}
             </p>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               {isTeamAWinning ? campaign.team_a_name : campaign.team_b_name} está na frente
             </p>
           </div>
@@ -760,9 +728,9 @@ const SalesDuel = () => {
 
         {/* Ranking */}
         <section>
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center sm:text-left">🏅 Ranking Geral</h2>
-          <div className="bg-card rounded-lg p-4 sm:p-6 shadow-lg border">
-            <div className="space-y-2 sm:space-y-3">
+          <h2 className="text-2xl font-bold mb-4">🏅 Ranking Geral</h2>
+          <div className="bg-card rounded-lg p-6 shadow-lg border">
+            <div className="space-y-3">
               {allMembers.map((member, idx) => {
                 // Calcular posição apenas para quem tem vendas
                 const membersWithSales = allMembers.filter(m => m.value > 0);
@@ -772,27 +740,27 @@ const SalesDuel = () => {
                 return (
                   <div
                     key={idx}
-                    className={`flex items-center justify-between p-3 sm:p-4 rounded-lg transition-all ${
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
                       position === 0 ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50" :
                       position === 1 ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/50" :
                       position === 2 ? "bg-gradient-to-r from-orange-600/20 to-orange-700/20 border border-orange-600/50" :
                       "bg-background"
                     }`}
                   >
-                    <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                      <span className="text-xl sm:text-2xl font-bold w-6 sm:w-8 flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl font-bold w-8">
                         {hasRanking ? (
                           position === 0 ? "🥇" : position === 1 ? "🥈" : position === 2 ? "🥉" : `${position + 1}º`
                         ) : (
                           "-"
                         )}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-sm sm:text-base truncate">{member.name}</p>
-                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{member.team}</p>
+                      <div>
+                        <p className="font-semibold">{member.name}</p>
+                        <p className="text-sm text-muted-foreground">{member.team}</p>
                       </div>
                     </div>
-                    <span className="text-base sm:text-xl font-bold text-primary whitespace-nowrap ml-2">
+                    <span className="text-xl font-bold text-primary">
                       R$ {member.value.toLocaleString("pt-BR")}
                     </span>
                   </div>

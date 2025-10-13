@@ -159,34 +159,3 @@
     font-family: "Renfrew", sans-serif;
   }
 }
-
-/* ========== Estilos de impressão ========== */
-@media print {
-  @page {
-    size: auto;
-    margin: 10mm;
-  }
-
-  body {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
-
-  /* Ocultar elementos que não devem aparecer na impressão */
-  button,
-  .no-print {
-    display: none !important;
-  }
-
-  /* Garantir que todos os elementos sejam visíveis */
-  * {
-    overflow: visible !important;
-    page-break-inside: avoid;
-  }
-
-  /* Remover backgrounds que podem não imprimir bem */
-  .bg-gradient-to-br,
-  .backdrop-blur-sm {
-    background: white !important;
-  }
-}
