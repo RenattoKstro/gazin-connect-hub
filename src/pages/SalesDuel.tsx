@@ -328,10 +328,10 @@ const SalesDuel = () => {
   return (
     <div ref={printAreaRef} className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
       <Helmet>
-        <title>{campaign.campaign_name} - Duelo de Vendas</title>
-        <meta name="description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
-        <meta property="og:title" content={`${campaign.campaign_name} - Duelo de Vendas`} />
-        <meta property="og:description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
+        <title>Sparta vs Águia Velozes</title>
+        <meta name="description" content="Acompanhe o duelo de vendas entre Sparta e Águia Velozes! Veja quem está liderando a competição!" />
+        <meta property="og:title" content="Sparta vs Águia Velozes" />
+        <meta property="og:description" content="Acompanhe o duelo de vendas entre Sparta e Águia Velozes! Veja quem está liderando a competição!" />
         <meta property="og:image" content="https://gazinassisbrasil.shop/vs.jpg" />
         <meta property="og:image:alt" content="Preview do Duelo de Vendas" />
         <meta property="og:image:width" content="1200" />
@@ -339,8 +339,8 @@ const SalesDuel = () => {
         <meta property="og:url" content="https://gazinassisbrasil.shop/duelo" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${campaign.campaign_name} - Duelo de Vendas`} />
-        <meta name="twitter:description" content={`Acompanhe o duelo de vendas entre ${campaign.team_a_name} e ${campaign.team_b_name}! Meta: R$${campaign.goal_value.toLocaleString("pt-BR")}.`} />
+        <meta name="twitter:title" content="Sparta vs Águia Velozes" />
+        <meta name="twitter:description" content="Acompanhe o duelo de vendas entre Sparta e Águia Velozes! Veja quem está liderando a competição!" />
         <meta name="twitter:image" content="https://gazinassisbrasil.shop/vs.jpg" />
       </Helmet>
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
