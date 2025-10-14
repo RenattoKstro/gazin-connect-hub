@@ -295,23 +295,20 @@ const SalesDuel = () => {
     }
   };
 
-  // Função para calcular dias úteis (segunda a sábado) até o fim do mês
+  // Função para calcular dias úteis (segunda a sábado) para 16 dias úteis
   const getBusinessDaysInMonth = () => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const lastDay = new Date(year, month + 1, 0).getDate(); // Último dia do mês
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 29); // Aproximadamente 30 dias para garantir 16 dias úteis
     let businessDays = 0;
-
-    for (let day = today.getDate(); day <= lastDay; day++) {
-      const date = new Date(year, month, day);
-      const isWeekday = date.getDay() >= 1 && date.getDay() <= 6; // Segunda a sábado
+    for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const isWeekday = d.getDay() >= 1 && d.getDay() <= 6; // Segunda a sábado
       if (isWeekday) {
         businessDays++;
+        if (businessDays >= 16) break; // Garante exatamente 16 dias úteis
       }
     }
-
-    return businessDays;
+    return businessDays; // Retorna 16
   };
 
   if (loading) {
@@ -602,15 +599,13 @@ const SalesDuel = () => {
                     R$ {totalSales.toLocaleString("pt-BR")}
                   </p>
                 </div>
-                <div className="text-center">
-                  <p className="text-base text-muted-foreground">
-                    Meta diária: R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({businessDays} dias úteis)
-                  </p>
-                </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Faltam</p>
                   <p className="text-3xl font-bold text-orange-500">
-                    R$ {Math.max(0, campaign.goal_value - totalSales).toLocaleString("pt-BR")}
+                    R$ {remainingValue.toLocaleString("pt-BR")}/<span className="text-sm">{businessDays}</span>
+                  </p>
+                  <p className="text-sm font-semibold text-orange-500">
+                    R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
