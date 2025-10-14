@@ -571,6 +571,7 @@ const SalesDuel = () => {
       </header>
       <main className="container mx-auto px-4 py-8">
         <section className="mb-8">
+          <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mb-6" />
           <div className="bg-card rounded-lg p-6 shadow-lg border">
             <div className="flex justify-between items-center mb-6">
               <div>
@@ -592,7 +593,7 @@ const SalesDuel = () => {
                 </p>
               </div>
               <Progress value={progress} className="h-6" />
-              <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mt-3" />
+              <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mt-3 opacity-50" />
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm text-muted-foreground">Valor Atual</p>
