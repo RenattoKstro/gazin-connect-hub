@@ -604,10 +604,10 @@ const SalesDuel = () => {
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground text-center pt-2">
+              <p className="text-base text-muted-foreground text-center pt-2">
                 Progresso: {progress.toFixed(1)}%
               </p>
-              <p className="text-sm text-muted-foreground text-center pt-2">
+              <p className="text-base text-muted-foreground text-center pt-2">
                 Meta diária: R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({businessDays} dias úteis)
               </p>
             </div>
