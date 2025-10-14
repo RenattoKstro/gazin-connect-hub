@@ -578,9 +578,14 @@ const SalesDuel = () => {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
-                <p className="text-5xl font-bold text-primary mb-2">
-                  R$ {campaign.goal_value.toLocaleString("pt-BR")}
-                </p>
+                <div className="flex justify-between items-baseline">
+                  <p className="text-5xl font-bold text-primary">
+                    R$ {campaign.goal_value.toLocaleString("pt-BR")}
+                  </p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {progress.toFixed(1)}%
+                  </p>
+                </div>
               </div>
               <div className={`text-lg font-semibold px-4 py-2 rounded-full ${
                 isActive ? "bg-green-500/20 text-green-600" : "bg-red-500/20 text-red-600"
@@ -597,6 +602,11 @@ const SalesDuel = () => {
                     R$ {totalSales.toLocaleString("pt-BR")}
                   </p>
                 </div>
+                <div className="text-center">
+                  <p className="text-base text-muted-foreground">
+                    Meta diária: R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({businessDays} dias úteis)
+                  </p>
+                </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Faltam</p>
                   <p className="text-3xl font-bold text-orange-500">
@@ -604,12 +614,6 @@ const SalesDuel = () => {
                   </p>
                 </div>
               </div>
-              <p className="text-base text-muted-foreground text-center pt-2">
-                Progresso: {progress.toFixed(1)}%
-              </p>
-              <p className="text-base text-muted-foreground text-center pt-2">
-                Meta diária: R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({businessDays} dias úteis)
-              </p>
             </div>
           </div>
         </section>
