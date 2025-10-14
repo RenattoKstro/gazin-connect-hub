@@ -295,6 +295,25 @@ const SalesDuel = () => {
     }
   };
 
+  // Função para calcular dias úteis (segunda a sábado) até o fim do mês
+  const getBusinessDaysInMonth = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const lastDay = new Date(year, month + 1, 0).getDate(); // Último dia do mês
+    let businessDays = 0;
+
+    for (let day = today.getDate(); day <= lastDay; day++) {
+      const date = new Date(year, month, day);
+      const isWeekday = date.getDay() >= 1 && date.getDay() <= 6; // Segunda a sábado
+      if (isWeekday) {
+        businessDays++;
+      }
+    }
+
+    return businessDays;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex items-center justify-center">
@@ -324,6 +343,11 @@ const SalesDuel = () => {
     ...campaign.team_a_members.map(m => ({ ...m, team: campaign.team_a_name })),
     ...campaign.team_b_members.map(m => ({ ...m, team: campaign.team_b_name }))
   ].sort((a, b) => b.value - a.value);
+
+  // Calcular valor por dia
+  const remainingValue = Math.max(0, campaign.goal_value - totalSales);
+  const businessDays = getBusinessDaysInMonth();
+  const valuePerDay = businessDays > 0 ? remainingValue / businessDays : 0;
 
   return (
     <div ref={printAreaRef} className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
@@ -582,6 +606,9 @@ const SalesDuel = () => {
               </div>
               <p className="text-sm text-muted-foreground text-center pt-2">
                 Progresso: {progress.toFixed(1)}%
+              </p>
+              <p className="text-sm text-muted-foreground text-center pt-2">
+                Meta diária: R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({businessDays} dias úteis)
               </p>
             </div>
           </div>
