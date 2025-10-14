@@ -578,16 +578,9 @@ const SalesDuel = () => {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
-                <div className="relative">
-                  <p className="text-5xl font-bold text-primary">
-                    R$ {campaign.goal_value.toLocaleString("pt-BR")}
-                  </p>
-                  <div className="absolute inset-x-0 top-0 flex justify-center">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {progress.toFixed(1)}%
-                    </p>
-                  </div>
-                </div>
+                <p className="text-5xl font-bold text-primary">
+                  R$ {campaign.goal_value.toLocaleString("pt-BR")}
+                </p>
               </div>
               <div className={`text-lg font-semibold px-4 py-2 rounded-full ${
                 isActive ? "bg-green-500/20 text-green-600" : "bg-red-500/20 text-red-600"
@@ -596,6 +589,11 @@ const SalesDuel = () => {
               </div>
             </div>
             <div className="space-y-3">
+              <div className="flex justify-center">
+                <p className="text-2xl font-bold text-blue-600">
+                  {progress.toFixed(1)}%
+                </p>
+              </div>
               <Progress value={progress} className="h-6" />
               <div className="flex justify-between items-center">
                 <div>
