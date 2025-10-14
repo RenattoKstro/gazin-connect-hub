@@ -592,6 +592,7 @@ const SalesDuel = () => {
                 </p>
               </div>
               <Progress value={progress} className="h-6" />
+              <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mt-3" />
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm text-muted-foreground">Valor Atual</p>
