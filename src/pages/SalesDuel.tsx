@@ -295,6 +295,22 @@ const SalesDuel = () => {
     }
   };
 
+  // Função para calcular dias úteis (segunda a sábado) para 16 dias úteis
+  const getBusinessDaysInMonth = () => {
+    const today = new Date();
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 29); // Aproximadamente 30 dias para garantir 16 dias úteis
+    let businessDays = 0;
+    for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const isWeekday = d.getDay() >= 1 && d.getDay() <= 6; // Segunda a sábado
+      if (isWeekday) {
+        businessDays++;
+        if (businessDays >= 16) break; // Garante exatamente 16 dias úteis
+      }
+    }
+    return businessDays; // Retorna 16
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10 flex items-center justify-center">
@@ -324,6 +340,11 @@ const SalesDuel = () => {
     ...campaign.team_a_members.map(m => ({ ...m, team: campaign.team_a_name })),
     ...campaign.team_b_members.map(m => ({ ...m, team: campaign.team_b_name }))
   ].sort((a, b) => b.value - a.value);
+
+  // Calcular valor por dia
+  const remainingValue = Math.max(0, campaign.goal_value - totalSales);
+  const businessDays = getBusinessDaysInMonth();
+  const valuePerDay = businessDays > 0 ? remainingValue / businessDays : 0;
 
   return (
     <div ref={printAreaRef} className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
@@ -554,7 +575,7 @@ const SalesDuel = () => {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
-                <p className="text-5xl font-bold text-primary mb-2">
+                <p className="text-5xl font-bold text-primary">
                   R$ {campaign.goal_value.toLocaleString("pt-BR")}
                 </p>
               </div>
@@ -565,6 +586,11 @@ const SalesDuel = () => {
               </div>
             </div>
             <div className="space-y-3">
+              <div className="flex justify-center">
+                <p className="text-2xl font-bold text-blue-600">
+                  {progress.toFixed(1)}%
+                </p>
+              </div>
               <Progress value={progress} className="h-6" />
               <div className="flex justify-between items-center">
                 <div>
@@ -576,13 +602,13 @@ const SalesDuel = () => {
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Faltam</p>
                   <p className="text-3xl font-bold text-orange-500">
-                    R$ {Math.max(0, campaign.goal_value - totalSales).toLocaleString("pt-BR")}
+                    R$ {remainingValue.toLocaleString("pt-BR")}/<span className="text-sm">{businessDays}</span>
+                  </p>
+                  <p className="text-sm font-semibold text-orange-500">
+                    R$ {valuePerDay.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground text-center pt-2">
-                Progresso: {progress.toFixed(1)}%
-              </p>
             </div>
           </div>
         </section>
