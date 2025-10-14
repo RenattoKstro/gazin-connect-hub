@@ -9,8 +9,8 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Navigate } from "react-router-dom";
-import { Plus, Edit, Trash2, Upload, LogOut } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Plus, Edit, Trash2, Upload, LogOut, Swords } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import TVImageUpload from "@/components/TVImageUpload";
@@ -40,6 +40,7 @@ interface TVImage {
 const Admin = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [tvImages, setTvImages] = useState<TVImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -269,10 +270,16 @@ const Admin = () => {
                 </p>
               </div>
             </div>
-            <Button onClick={signOut} variant="outline" size="sm" className="self-start">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
-            </Button>
+            <div className="flex gap-2 self-start">
+              <Button onClick={() => navigate('/duelo')} variant="outline" size="sm">
+                <Swords className="w-4 h-4 mr-2" />
+                Duelo
+              </Button>
+              <Button onClick={signOut} variant="outline" size="sm">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </header>

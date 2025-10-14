@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Settings, Plus, Trash2, Upload, Printer } from "lucide-react";
+import { Settings, Plus, Trash2, Upload, Printer, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
@@ -30,7 +30,7 @@ interface CampaignData {
 }
 
 const SalesDuel = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [configOpen, setConfigOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -539,6 +539,12 @@ const SalesDuel = () => {
                 PRINT
               </Button>
             </div>
+          )}
+          {user && (
+            <Button onClick={signOut} variant="outline" size="sm" className={isPrinting ? "hidden" : ""}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
           )}
         </div>
       </header>
