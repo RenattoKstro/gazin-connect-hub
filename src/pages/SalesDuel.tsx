@@ -613,6 +613,7 @@ const SalesDuel = () => {
               </div>
             </div>
           </div>
+          <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mt-6 opacity-50" />
         </section>
         <section className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Equipes</h2>
