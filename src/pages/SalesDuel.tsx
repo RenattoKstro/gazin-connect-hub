@@ -578,13 +578,15 @@ const SalesDuel = () => {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
-                <div className="flex justify-between items-baseline">
+                <div className="relative">
                   <p className="text-5xl font-bold text-primary">
                     R$ {campaign.goal_value.toLocaleString("pt-BR")}
                   </p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {progress.toFixed(1)}%
-                  </p>
+                  <div className="absolute inset-x-0 top-0 flex justify-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {progress.toFixed(1)}%
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className={`text-lg font-semibold px-4 py-2 rounded-full ${
