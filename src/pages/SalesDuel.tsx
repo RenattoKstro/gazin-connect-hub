@@ -612,7 +612,6 @@ const SalesDuel = () => {
               </div>
             </div>
           </div>
-          <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mt-6 opacity-50" />
         </section>
         <section className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Equipes</h2>
@@ -656,7 +655,7 @@ const SalesDuel = () => {
                 </div>
               </div>
             </div>
-            <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
+            <div className=`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
               !isTeamAWinning && teamBTotal > 0 ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
             }`}>
               <div className="mb-4 flex items-center justify-between">
