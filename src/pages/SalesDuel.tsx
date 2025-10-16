@@ -295,20 +295,18 @@ const SalesDuel = () => {
     }
   };
 
-  // Função para calcular dias úteis (segunda a sábado) para 16 dias úteis
+  // Função para calcular dias úteis (segunda a sábado) restantes no mês atual
   const getBusinessDaysInMonth = () => {
     const today = new Date();
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + 29); // Aproximadamente 30 dias para garantir 16 dias úteis
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Último dia do mês
     let businessDays = 0;
-    for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+    for (let d = new Date(today); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
       const isWeekday = d.getDay() >= 1 && d.getDay() <= 6; // Segunda a sábado
       if (isWeekday) {
         businessDays++;
-        if (businessDays >= 16) break; // Garante exatamente 16 dias úteis
       }
     }
-    return businessDays; // Retorna 16
+    return businessDays;
   };
 
   if (loading) {
