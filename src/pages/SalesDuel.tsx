@@ -295,7 +295,7 @@ const SalesDuel = () => {
     }
   };
 
-  // Função para calcular dias úteis (segunda a sábado) restantes no mês atual
+  // Função para calcular dias úteis (segunda a sábado) restantes no mês atual, incluindo o dia atual
   const getBusinessDaysInMonth = () => {
     const today = new Date();
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Último dia do mês
