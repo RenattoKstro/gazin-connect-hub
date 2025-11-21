@@ -3,7 +3,7 @@ import { CollaboratorCard, Collaborator } from "@/components/CollaboratorCard";
 import { SearchBar } from "@/components/SearchBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, Building2, Settings, LogIn, Instagram, FileDown } from "lucide-react";
+import { Users, Building2, Settings, LogIn, Instagram, FileDown, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import gazinLogo from "@/assets/gazin-logo-new.png";
@@ -191,16 +191,22 @@ const Index = () => {
                 </button>
               </div>
             </div>
-            {!user && (
-              <div className="mt-4 pt-2 border-t border-border/20">
+            <div className="mt-4 pt-4 border-t border-border/20 space-y-2">
+              <Button asChild variant="default" size="sm" className="w-full sm:w-auto">
+                <Link to="/cadastro">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Abrir Cadastro
+                </Link>
+              </Button>
+              {!user && (
                 <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
                   <Link to="/auth">
                     <LogIn className="w-3 h-3 mr-1" />
                     Acesso Restrito
                   </Link>
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </footer>
       </main>
