@@ -11,7 +11,8 @@ import TV from "./pages/TV";
 import Downloads from "./pages/Downloads";
 import SalesDuel from "./pages/SalesDuel";
 import NotFound from "./pages/NotFound";
-import CalculatorPage from "./pages/CalculatorPage"; 
+import CalculatorPage from "./pages/CalculatorPage";
+import Cadastro from "./pages/Cadastro";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/tv" element={<TV />} />
             <Route path="/duelo" element={<SalesDuel />} />
             <Route path="/calculadora" element={<CalculatorPage />} />
+            <Route path="/cadastro" element={<Cadastro />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
