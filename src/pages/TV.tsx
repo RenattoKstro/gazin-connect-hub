@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TVImage {
@@ -12,6 +12,32 @@ const TV = () => {
   const [images, setImages] = useState<TVImage[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(Date.now());
+
+  const fetchTVImages = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tv_images")
+        .select("*")
+        .eq("active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) throw error;
+      
+      // Update images and force refresh key to bust cache
+      setImages(data || []);
+      setRefreshKey(Date.now());
+      
+      // Reset to first image when new images are loaded
+      if (data && data.length > 0) {
+        setCurrentImageIndex(0);
+      }
+    } catch (error) {
+      console.error("Error fetching TV images:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchTVImages();
@@ -25,17 +51,24 @@ const TV = () => {
           schema: 'public', 
           table: 'tv_images' 
         }, 
-        () => {
+        (payload) => {
+          console.log('TV images changed:', payload);
           // Refetch images when there are changes
           fetchTVImages();
         }
       )
       .subscribe();
 
+    // Also poll every 30 seconds as backup
+    const pollInterval = setInterval(() => {
+      fetchTVImages();
+    }, 30000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
-  }, []);
+  }, [fetchTVImages]);
 
   useEffect(() => {
     if (images.length > 1) {
@@ -46,23 +79,6 @@ const TV = () => {
       return () => clearInterval(interval);
     }
   }, [images.length]);
-
-  const fetchTVImages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("tv_images")
-        .select("*")
-        .eq("active", true)
-        .order("display_order", { ascending: true });
-
-      if (error) throw error;
-      setImages(data || []);
-    } catch (error) {
-      console.error("Error fetching TV images:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -88,9 +104,10 @@ const TV = () => {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
       <img
-        src={currentImage.image_url}
+        key={`${currentImage.id}-${refreshKey}`}
+        src={`${currentImage.image_url}?t=${refreshKey}`}
         alt={currentImage.name}
-        className="max-w-full max-h-full object-contain"
+        className="max-w-full max-h-full object-contain transition-opacity duration-500"
         style={{
           width: "100vw",
           height: "100vh",
