@@ -24,14 +24,20 @@ const TV = () => {
 
       if (error) throw error;
       
-      // Update images and force refresh key to bust cache
-      setImages(data || []);
-      setRefreshKey(Date.now());
-      
-      // Reset to first image when new images are loaded
-      if (data && data.length > 0) {
-        setCurrentImageIndex(0);
-      }
+      // Only update if images actually changed to avoid resetting slideshow
+      setImages(prevImages => {
+        const newData = data || [];
+        // Compare by IDs to detect actual changes
+        const prevIds = prevImages.map(img => img.id).sort().join(',');
+        const newIds = newData.map(img => img.id).sort().join(',');
+        
+        if (prevIds !== newIds) {
+          // Images changed, update refresh key for cache busting
+          setRefreshKey(Date.now());
+          return newData;
+        }
+        return prevImages;
+      });
     } catch (error) {
       console.error("Error fetching TV images:", error);
     } finally {
@@ -74,7 +80,7 @@ const TV = () => {
     if (images.length > 1) {
       const interval = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      }, 10000); // Change image every 10 seconds
+      }, 20000); // Change image every 20 seconds
 
       return () => clearInterval(interval);
     }
