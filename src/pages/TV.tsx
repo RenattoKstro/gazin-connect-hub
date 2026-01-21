@@ -74,7 +74,7 @@ const TV = () => {
     if (images.length > 1) {
       const interval = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % images.length);
-      }, 5000); // Change image every 5 seconds
+      }, 10000); // Change image every 10 seconds
 
       return () => clearInterval(interval);
     }
