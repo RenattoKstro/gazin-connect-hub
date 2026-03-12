@@ -262,6 +262,8 @@ const Downloads = () => {
                         <SelectItem value="doc">DOC</SelectItem>
                         <SelectItem value="docx">DOCX</SelectItem>
                         <SelectItem value="apk">APK</SelectItem>
+                        <SelectItem value="zip">ZIP</SelectItem>
+                        <SelectItem value="exe">EXE</SelectItem>
                         <SelectItem value="jpg">JPG</SelectItem>
                         <SelectItem value="png">PNG</SelectItem>
                         <SelectItem value="webp">WEBP</SelectItem>
