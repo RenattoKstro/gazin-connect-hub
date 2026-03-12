@@ -68,6 +68,8 @@ const Downloads = () => {
       case "docx":
         return <FileText className="w-12 h-12 text-blue-500" />;
       case "apk":
+      case "ZIP":
+      case "exe":
         return <Smartphone className="w-12 h-12 text-green-500" />;
       case "jpg":
       case "jpeg":
