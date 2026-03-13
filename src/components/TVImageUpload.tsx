@@ -145,7 +145,7 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
             <Input
               id="tv-image-upload"
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo"
               className="hidden"
               onChange={handleFileUpload}
               disabled={uploading}
