@@ -27,8 +27,13 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error("Por favor, selecione apenas arquivos de imagem");
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      toast.error("Por favor, selecione apenas arquivos de imagem ou vídeo");
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo: 100MB");
       return;
     }
 
