@@ -175,11 +175,19 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
                     image.active ? 'bg-white' : 'bg-gray-50'
                   }`}
                 >
-                  <img
-                    src={image.image_url}
-                    alt={image.name}
-                    className="w-16 h-16 object-cover rounded"
-                  />
+                  {image.name.match(/\.(mp4|webm|mov|avi)$/i) ? (
+                    <video
+                      src={image.image_url}
+                      className="w-16 h-16 object-cover rounded"
+                      muted
+                    />
+                  ) : (
+                    <img
+                      src={image.image_url}
+                      alt={image.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{image.name}</p>
                     <p className="text-xs text-gray-500">
