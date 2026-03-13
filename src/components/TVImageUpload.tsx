@@ -152,7 +152,7 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
             />
           </Label>
           <p className="text-xs text-gray-500 mt-1">
-            PNG, JPG, WEBP até 20MB
+            Imagens (PNG, JPG, WEBP) ou Vídeos (MP4, WEBM) até 100MB
           </p>
         </div>
 
