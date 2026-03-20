@@ -34,6 +34,7 @@ const AppRoutes = () => (
     <Route path="/" element={<Index />} />
     <Route path="/busca/:nome" element={<Index />} />
     <Route path="/auth" element={<Auth />} />
+    <Route path="/cadastro" element={<Auth />} />
     <Route path="/duelo" element={<SalesDuel />} />
     <Route path="/admin" element={<DuelAdminOnlyRoute><Admin /></DuelAdminOnlyRoute>} />
     <Route path="/downloads" element={<DuelAdminOnlyRoute><Downloads /></DuelAdminOnlyRoute>} />

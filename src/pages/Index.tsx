@@ -213,9 +213,9 @@ const Index = () => {
             </div>
             <div className="mt-4 pt-2 border-t border-border/20">
               <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
-                <Link to="/auth">
+                <Link to="/cadastro">
                   <LogIn className="w-3 h-3 mr-1" />
-                  Acesso Restrito
+                  CADASTRO
                 </Link>
               </Button>
             </div>
