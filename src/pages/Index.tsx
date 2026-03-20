@@ -10,7 +10,7 @@ import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Index = () => {
   const { nome } = useParams<{ nome: string }>();
-  const { user, isAdmin, isDuelAdmin, signOut } = useAuth();
+  const { user, isAdmin, accessLevel, signOut } = useAuth();
   const [searchTerm, setSearchTerm] = useState(nome || "");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +86,7 @@ const Index = () => {
             {/* Auth Actions - Only show for authenticated users */}
             {user && (
               <div className="flex items-center gap-2 justify-center sm:self-start flex-wrap">
-                {isDuelAdmin ? (
+                {accessLevel === "duel_admin" ? (
                   <>
                     <Button asChild variant="outline" size="sm">
                       <Link to="/duelo">
@@ -211,16 +211,14 @@ const Index = () => {
                 </button>
               </div>
             </div>
-            {!user && (
-              <div className="mt-4 pt-2 border-t border-border/20">
-                <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
-                  <Link to="/auth">
-                    <LogIn className="w-3 h-3 mr-1" />
-                    Acesso Restrito
-                  </Link>
-                </Button>
-              </div>
-            )}
+            <div className="mt-4 pt-2 border-t border-border/20">
+              <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                <Link to="/auth">
+                  <LogIn className="w-3 h-3 mr-1" />
+                  Acesso Restrito
+                </Link>
+              </Button>
+            </div>
           </div>
         </footer>
       </main>

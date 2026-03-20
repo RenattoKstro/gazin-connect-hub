@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+const MAIN_ADMIN_EMAIL = 'admin@filial359.com';
 const DUEL_ADMIN_EMAIL = 'admin@filial195.com';
 const DUEL_ADMIN_PASSWORD = 'admin';
 
@@ -31,6 +32,8 @@ export const useAuth = () => {
 
 const getAccessLevel = async (sessionUser: User | null): Promise<AccessLevel> => {
   if (!sessionUser) return 'guest';
+
+  if (sessionUser.email === MAIN_ADMIN_EMAIL) return 'full_admin';
   if (sessionUser.email === DUEL_ADMIN_EMAIL) return 'duel_admin';
 
   const { data: profile } = await supabase
