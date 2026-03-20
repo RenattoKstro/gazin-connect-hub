@@ -1,98 +1,57 @@
-import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Link, Navigate } from "react-router-dom";
+import { UserPlus, RefreshCw } from "lucide-react";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Cadastro = () => {
-  const { signUp, user, accessLevel } = useAuth();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  if (user) {
-    return <Navigate to={accessLevel === "duel_admin" ? "/duelo" : "/"} replace />;
-  }
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    const { error } = await signUp(email, password);
-
-    if (error) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Verifique seu e-mail para confirmar a conta, se necessário.",
-      });
-      setEmail("");
-      setPassword("");
-    }
-
-    setIsLoading(false);
+  const handleRedirect = () => {
+    window.open("https://cadastrodigital.gazin.com.br/login", "_blank");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-elegant">
-        <CardHeader className="text-center">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#003366] via-[#004080] to-[#002147] flex items-center justify-center p-4">
+      <div className="absolute inset-0 flex items-center justify-center opacity-10">
+        <img
+          src={gazinLogo}
+          alt="Gazin Background"
+          className="w-[800px] h-auto object-contain"
+        />
+      </div>
+
+      <div className="relative z-10 max-w-2xl w-full space-y-8 text-center">
+        <div className="space-y-4">
           <img
             src={gazinLogo}
             alt="Gazin Logo"
-            className="w-20 h-auto mx-auto mb-4 rounded-lg"
+            className="w-48 h-auto mx-auto mb-8"
           />
-          <CardTitle className="text-2xl font-bold text-primary">
-            Cadastro de Usuário
-          </CardTitle>
-          <p className="text-muted-foreground">
-            Crie seu acesso ao sistema de colaboradores
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Portal de Cadastro
+          </h1>
+          <p className="text-xl text-white/80">
+            Escolha uma opção para continuar
           </p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Crie uma senha"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Cadastrando..." : "Cadastrar"}
-            </Button>
-            <Button asChild variant="link" className="w-full">
-              <Link to="/auth">Já tenho acesso</Link>
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mt-12">
+          <Button
+            onClick={handleRedirect}
+            size="lg"
+            className="h-32 flex flex-col gap-4 bg-white/10 hover:bg-white/20 border-2 border-white/30 text-white backdrop-blur-sm transition-all duration-300"
+          >
+            <UserPlus className="w-12 h-12" />
+            <span className="text-xl font-semibold">Novo Cadastro</span>
+          </Button>
+
+          <Button
+            onClick={handleRedirect}
+            size="lg"
+            className="h-32 flex flex-col gap-4 bg-white/10 hover:bg-white/20 border-2 border-white/30 text-white backdrop-blur-sm transition-all duration-300"
+          >
+            <RefreshCw className="w-12 h-12" />
+            <span className="text-xl font-semibold">Atualizar Cadastro</span>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
