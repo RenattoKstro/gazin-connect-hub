@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const MAIN_ADMIN_EMAIL = 'admin@filial359.com';
 const DUEL_ADMIN_EMAIL = 'admin@filial195.com';
-const DUEL_ADMIN_PASSWORD = 'admin';
+const DUEL_ADMIN_PASSWORD = 'admin195';
 const DUEL_ADMIN_SESSION_KEY = 'duel-admin-session';
 
 type AccessLevel = 'guest' | 'user' | 'duel_admin' | 'full_admin';

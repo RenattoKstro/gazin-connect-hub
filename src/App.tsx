@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Cadastro from "./pages/Cadastro";
 import TV from "./pages/TV";
 import Downloads from "./pages/Downloads";
 import SalesDuel from "./pages/SalesDuel";
@@ -34,7 +35,7 @@ const AppRoutes = () => (
     <Route path="/" element={<Index />} />
     <Route path="/busca/:nome" element={<Index />} />
     <Route path="/auth" element={<Auth />} />
-    <Route path="/cadastro" element={<Auth />} />
+    <Route path="/cadastro" element={<Cadastro />} />
     <Route path="/duelo" element={<SalesDuel />} />
     <Route path="/admin" element={<DuelAdminOnlyRoute><Admin /></DuelAdminOnlyRoute>} />
     <Route path="/downloads" element={<DuelAdminOnlyRoute><Downloads /></DuelAdminOnlyRoute>} />

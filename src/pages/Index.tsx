@@ -211,11 +211,17 @@ const Index = () => {
                 </button>
               </div>
             </div>
-            <div className="mt-4 pt-2 border-t border-border/20">
+            <div className="mt-4 pt-2 border-t border-border/20 flex items-center justify-center gap-2 flex-wrap">
               <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
                 <Link to="/cadastro">
                   <LogIn className="w-3 h-3 mr-1" />
                   CADASTRO
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                <Link to="/auth">
+                  <LogIn className="w-3 h-3 mr-1" />
+                  ÁREA RESTRITA
                 </Link>
               </Button>
             </div>
