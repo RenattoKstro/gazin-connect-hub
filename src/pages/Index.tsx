@@ -10,7 +10,7 @@ import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Index = () => {
   const { nome } = useParams<{ nome: string }>();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isDuelAdmin, signOut } = useAuth();
   const [searchTerm, setSearchTerm] = useState(nome || "");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,20 +85,40 @@ const Index = () => {
             
             {/* Auth Actions - Only show for authenticated users */}
             {user && (
-              <div className="flex items-center gap-2 justify-center sm:self-start">
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/downloads">
-                    <FileDown className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Downloads</span>
-                  </Link>
-                </Button>
-                {isAdmin && (
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin">
+              <div className="flex items-center gap-2 justify-center sm:self-start flex-wrap">
+                {isDuelAdmin ? (
+                  <>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/duelo">
+                        Duelo
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" disabled>
+                      <FileDown className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Downloads</span>
+                    </Button>
+                    <Button variant="outline" size="sm" disabled>
                       <Settings className="w-4 h-4 sm:mr-2" />
                       <span className="hidden sm:inline">Admin</span>
-                    </Link>
-                  </Button>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/downloads">
+                        <FileDown className="w-4 h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Downloads</span>
+                      </Link>
+                    </Button>
+                    {isAdmin && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link to="/admin">
+                          <Settings className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Admin</span>
+                        </Link>
+                      </Button>
+                    )}
+                  </>
                 )}
                 <Button onClick={signOut} variant="ghost" size="sm">
                   Sair
