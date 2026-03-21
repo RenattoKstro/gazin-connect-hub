@@ -3,7 +3,7 @@ import { CollaboratorCard, Collaborator } from "@/components/CollaboratorCard";
 import { SearchBar } from "@/components/SearchBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, Building2, Settings, LogIn, Instagram, FileDown } from "lucide-react";
+import { Users, Building2, Settings, LogIn, Instagram, FileDown, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import gazinLogo from "@/assets/gazin-logo-new.png";

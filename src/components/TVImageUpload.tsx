@@ -27,8 +27,13 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error("Por favor, selecione apenas arquivos de imagem");
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      toast.error("Por favor, selecione apenas arquivos de imagem ou vídeo");
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo: 100MB");
       return;
     }
 
@@ -140,14 +145,14 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
             <Input
               id="tv-image-upload"
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm,video/quicktime,video/x-msvideo"
               className="hidden"
               onChange={handleFileUpload}
               disabled={uploading}
             />
           </Label>
           <p className="text-xs text-gray-500 mt-1">
-            PNG, JPG, WEBP até 20MB
+            Imagens (PNG, JPG, WEBP) ou Vídeos (MP4, WEBM) até 100MB
           </p>
         </div>
 
@@ -170,11 +175,19 @@ const TVImageUpload = ({ images, onImagesChange }: TVImageUploadProps) => {
                     image.active ? 'bg-white' : 'bg-gray-50'
                   }`}
                 >
-                  <img
-                    src={image.image_url}
-                    alt={image.name}
-                    className="w-16 h-16 object-cover rounded"
-                  />
+                  {image.name.match(/\.(mp4|webm|mov|avi)$/i) ? (
+                    <video
+                      src={image.image_url}
+                      className="w-16 h-16 object-cover rounded"
+                      muted
+                    />
+                  ) : (
+                    <img
+                      src={image.image_url}
+                      alt={image.name}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{image.name}</p>
                     <p className="text-xs text-gray-500">
