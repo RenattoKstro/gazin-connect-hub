@@ -10,7 +10,7 @@ import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Index = () => {
   const { nome } = useParams<{ nome: string }>();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, accessLevel, signOut } = useAuth();
   const [searchTerm, setSearchTerm] = useState(nome || "");
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,20 +85,40 @@ const Index = () => {
             
             {/* Auth Actions - Only show for authenticated users */}
             {user && (
-              <div className="flex items-center gap-2 justify-center sm:self-start">
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/downloads">
-                    <FileDown className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Downloads</span>
-                  </Link>
-                </Button>
-                {isAdmin && (
-                  <Button asChild variant="outline" size="sm">
-                    <Link to="/admin">
+              <div className="flex items-center gap-2 justify-center sm:self-start flex-wrap">
+                {accessLevel === "duel_admin" ? (
+                  <>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/duelo">
+                        Duelo
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="sm" disabled>
+                      <FileDown className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Downloads</span>
+                    </Button>
+                    <Button variant="outline" size="sm" disabled>
                       <Settings className="w-4 h-4 sm:mr-2" />
                       <span className="hidden sm:inline">Admin</span>
-                    </Link>
-                  </Button>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/downloads">
+                        <FileDown className="w-4 h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Downloads</span>
+                      </Link>
+                    </Button>
+                    {isAdmin && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link to="/admin">
+                          <Settings className="w-4 h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Admin</span>
+                        </Link>
+                      </Button>
+                    )}
+                  </>
                 )}
                 <Button onClick={signOut} variant="ghost" size="sm">
                   Sair
@@ -191,16 +211,20 @@ const Index = () => {
                 </button>
               </div>
             </div>
-            {!user && (
-              <div className="mt-4 pt-2 border-t border-border/20">
-                <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
-                  <Link to="/auth">
-                    <LogIn className="w-3 h-3 mr-1" />
-                    Acesso Restrito
-                  </Link>
-                </Button>
-              </div>
-            )}
+            <div className="mt-4 pt-2 border-t border-border/20 flex items-center justify-center gap-2 flex-wrap">
+              <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                <Link to="/cadastro">
+                  <LogIn className="w-3 h-3 mr-1" />
+                  CADASTRO
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                <Link to="/auth">
+                  <LogIn className="w-3 h-3 mr-1" />
+                  ÁREA RESTRITA
+                </Link>
+              </Button>
+            </div>
           </div>
         </footer>
       </main>
