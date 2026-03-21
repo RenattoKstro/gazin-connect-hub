@@ -2,10 +2,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+const MAIN_ADMIN_EMAIL = 'admin@filial359.com';
+const DUEL_ADMIN_EMAIL = 'admin@filial195.com';
+const DUEL_ADMIN_PASSWORD = 'admin195';
+
+type AccessLevel = 'guest' | 'user' | 'duel_admin' | 'full_admin';
+
 interface AuthContextProps {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isDuelAdmin: boolean;
+  accessLevel: AccessLevel;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
@@ -22,60 +30,118 @@ export const useAuth = () => {
   return context;
 };
 
+const getAccessLevel = async (sessionUser: User | null): Promise<AccessLevel> => {
+  if (!sessionUser) return 'guest';
+
+  if (sessionUser.email === MAIN_ADMIN_EMAIL) return 'full_admin';
+  if (sessionUser.email === DUEL_ADMIN_EMAIL) return 'duel_admin';
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('user_id', sessionUser.id)
+    .maybeSingle();
+
+  return profile?.role === 'admin' ? 'full_admin' : 'user';
+};
+
+const ensureDuelAdminProfileAccess = async (sessionUser: User | null) => {
+  if (!sessionUser || sessionUser.email !== DUEL_ADMIN_EMAIL) return;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: 'admin' })
+    .eq('user_id', sessionUser.id);
+
+  if (error) {
+    console.error('Error granting duel admin profile access:', error);
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>('guest');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Check if user is admin
+      async (_event, nextSession) => {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+
+        if (nextSession?.user) {
           setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            setIsAdmin(profile?.role === 'admin');
+            await ensureDuelAdminProfileAccess(nextSession.user);
+            const nextAccessLevel = await getAccessLevel(nextSession.user);
+            setAccessLevel(nextAccessLevel);
+            setIsLoading(false);
           }, 0);
         } else {
-          setIsAdmin(false);
+          setAccessLevel('guest');
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session) {
-        setIsLoading(false);
+    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
+      if (existingSession?.user) {
+        await ensureDuelAdminProfileAccess(existingSession.user);
+        const nextAccessLevel = await getAccessLevel(existingSession.user);
+        setAccessLevel(nextAccessLevel);
       }
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  const ensureDuelAdminExists = async () => {
+    const { error } = await supabase.auth.signUp({
+      email: DUEL_ADMIN_EMAIL,
+      password: DUEL_ADMIN_PASSWORD,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
+
+    if (
+      error &&
+      !error.message.toLowerCase().includes('already registered') &&
+      !error.message.toLowerCase().includes('already been registered')
+    ) {
+      throw error;
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    let { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    if (error && email === DUEL_ADMIN_EMAIL && password === DUEL_ADMIN_PASSWORD) {
+      try {
+        await ensureDuelAdminExists();
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        error = retry.error;
+
+        if (!retry.error && retry.data.user) {
+          await ensureDuelAdminProfileAccess(retry.data.user);
+        }
+      } catch (signupError) {
+        error = signupError;
+      }
+    }
+
     return { error };
   };
 
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -87,21 +153,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    const clearAuthState = () => {
+      setUser(null);
+      setSession(null);
+      setAccessLevel('guest');
+
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('sb-'))
+        .forEach((key) => localStorage.removeItem(key));
+    };
+
     try {
-      await supabase.auth.signOut();
-      // Force a page reload to ensure clean state
-      window.location.href = '/';
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('Error signing out:', error);
-      // Still reload the page even if there's an error
-      window.location.href = '/';
+    } finally {
+      clearAuthState();
+      window.location.replace('/');
     }
   };
 
   const value = {
     user,
     session,
-    isAdmin,
+    isAdmin: accessLevel === 'full_admin',
+    isDuelAdmin: accessLevel === 'duel_admin' || accessLevel === 'full_admin',
+    accessLevel,
     isLoading,
     signIn,
     signUp,
