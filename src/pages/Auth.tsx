@@ -10,7 +10,7 @@ import { LogIn } from "lucide-react";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
 const Auth = () => {
-  const { signIn, user } = useAuth();
+  const { signIn, user, accessLevel } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ const Auth = () => {
 
   // Redirect if already authenticated
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={accessLevel === "duel_admin" ? "/duelo" : "/"} replace />;
   }
 
   const handleSignIn = async (e: React.FormEvent) => {
