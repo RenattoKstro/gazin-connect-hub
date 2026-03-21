@@ -11,26 +11,84 @@ import { Settings, Plus, Trash2, Upload, Printer, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
+import type { Json } from "@/integrations/supabase/types";
 
 interface Member {
   name: string;
   value: number;
 }
 
+interface Team {
+  id: string;
+  name: string;
+  logo?: string;
+  members: Member[];
+}
+
 interface CampaignData {
   id: string;
   campaign_name: string;
   goal_value: number;
-  team_a_name: string;
-  team_b_name: string;
-  team_a_logo?: string;
-  team_b_logo?: string;
-  team_a_members: Member[];
-  team_b_members: Member[];
+  teams: Team[];
 }
 
+interface MultiTeamPayload {
+  teams?: Team[];
+}
+
+const createTeam = (index: number): Team => ({
+  id: `team-${Date.now()}-${index}`,
+  name: `Equipe ${index + 1}`,
+  logo: "",
+  members: [],
+});
+
+const isMultiTeamPayload = (value: Json | null): value is MultiTeamPayload => {
+  return !!value && typeof value === 'object' && !Array.isArray(value) && 'teams' in value;
+};
+
+const normalizeTeams = (rawTeams: Team[]): Team[] => rawTeams.map((team, index) => ({
+  id: team.id || `team-${index}`,
+  name: team.name || `Equipe ${index + 1}`,
+  logo: team.logo || "",
+  members: Array.isArray(team.members)
+    ? team.members.map((member) => ({ name: member.name || "", value: Number(member.value) || 0 }))
+    : [],
+}));
+
+const mapCampaignData = (data: any): CampaignData => {
+  if (isMultiTeamPayload(data.team_a_members) && Array.isArray(data.team_a_members.teams)) {
+    return {
+      id: data.id,
+      campaign_name: data.campaign_name,
+      goal_value: Number(data.goal_value),
+      teams: normalizeTeams(data.team_a_members.teams),
+    };
+  }
+
+  return {
+    id: data.id,
+    campaign_name: data.campaign_name,
+    goal_value: Number(data.goal_value),
+    teams: normalizeTeams([
+      {
+        id: 'team-a',
+        name: data.team_a_name,
+        logo: data.team_a_logo || "",
+        members: (data.team_a_members as Member[]) || [],
+      },
+      {
+        id: 'team-b',
+        name: data.team_b_name,
+        logo: data.team_b_logo || "",
+        members: (data.team_b_members as Member[]) || [],
+      },
+    ]),
+  };
+};
+
 const SalesDuel = () => {
-  const { isAdmin, user, signOut } = useAuth();
+  const { isDuelAdmin, user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [configOpen, setConfigOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -38,15 +96,9 @@ const SalesDuel = () => {
   const [isPrinting, setIsPrinting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const printAreaRef = useRef<HTMLDivElement>(null);
-  // Form states
   const [campaignName, setCampaignName] = useState("");
   const [goalValue, setGoalValue] = useState(0);
-  const [teamAName, setTeamAName] = useState("");
-  const [teamBName, setTeamBName] = useState("");
-  const [teamALogo, setTeamALogo] = useState("");
-  const [teamBLogo, setTeamBLogo] = useState("");
-  const [teamAMembers, setTeamAMembers] = useState<Member[]>([]);
-  const [teamBMembers, setTeamBMembers] = useState<Member[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
 
   useEffect(() => {
     fetchCampaign();
@@ -62,26 +114,11 @@ const SalesDuel = () => {
         .maybeSingle();
       if (error) throw error;
       if (data) {
-        const campaignData: CampaignData = {
-          id: data.id,
-          campaign_name: data.campaign_name,
-          goal_value: Number(data.goal_value),
-          team_a_name: data.team_a_name,
-          team_b_name: data.team_b_name,
-          team_a_logo: data.team_a_logo,
-          team_b_logo: data.team_b_logo,
-          team_a_members: (data.team_a_members as unknown as Member[]) || [],
-          team_b_members: (data.team_b_members as unknown as Member[]) || [],
-        };
+        const campaignData = mapCampaignData(data);
         setCampaign(campaignData);
         setCampaignName(campaignData.campaign_name);
         setGoalValue(campaignData.goal_value);
-        setTeamAName(campaignData.team_a_name);
-        setTeamBName(campaignData.team_b_name);
-        setTeamALogo(campaignData.team_a_logo || "");
-        setTeamBLogo(campaignData.team_b_logo || "");
-        setTeamAMembers(campaignData.team_a_members);
-        setTeamBMembers(campaignData.team_b_members);
+        setTeams(campaignData.teams);
       }
     } catch (error) {
       console.error("Error fetching campaign:", error);
@@ -91,24 +128,22 @@ const SalesDuel = () => {
     }
   };
 
-  const handleLogoUpload = async (file: File, team: "A" | "B") => {
+  const handleLogoUpload = async (file: File, teamId: string) => {
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `team_${team.toLowerCase()}_logo_${Date.now()}.${fileExt}`;
-      const filePath = fileName;
+      const fileName = `${teamId}_logo_${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from('tv-images')
-        .upload(filePath, file, { upsert: true });
+        .upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage
         .from('tv-images')
-        .getPublicUrl(filePath);
-      if (team === "A") {
-        setTeamALogo(publicUrl);
-      } else {
-        setTeamBLogo(publicUrl);
-      }
-      toast.success(`Logo da Equipe ${team} carregada com sucesso!`);
+        .getPublicUrl(fileName);
+
+      setTeams((current) => current.map((team) => (
+        team.id === teamId ? { ...team, logo: publicUrl } : team
+      )));
+      toast.success(`Logo carregada com sucesso!`);
     } catch (error) {
       console.error("Error uploading logo:", error);
       toast.error("Erro ao carregar logo");
@@ -116,27 +151,36 @@ const SalesDuel = () => {
   };
 
   const handleSave = async () => {
-    if (!isAdmin) {
+    if (!isDuelAdmin) {
       toast.error("Apenas administradores podem salvar configurações");
       return;
     }
+
+    if (!campaign || teams.length < 2) {
+      toast.error("Cadastre pelo menos duas equipes");
+      return;
+    }
+
     try {
-      if (campaign) {
-        const { error } = await supabase
-          .from("sales_duel")
-          .update({
-            campaign_name: campaignName,
-            goal_value: goalValue,
-            team_a_name: teamAName,
-            team_b_name: teamBName,
-            team_a_logo: teamALogo,
-            team_b_logo: teamBLogo,
-            team_a_members: teamAMembers as unknown as any,
-            team_b_members: teamBMembers as unknown as any,
-          })
-          .eq("id", campaign.id);
-        if (error) throw error;
-      }
+      const normalizedTeams = normalizeTeams(teams);
+      const [teamA, teamB] = normalizedTeams;
+      const payload = { teams: normalizedTeams };
+
+      const { error } = await supabase
+        .from("sales_duel")
+        .update({
+          campaign_name: campaignName,
+          goal_value: goalValue,
+          team_a_name: teamA.name,
+          team_b_name: teamB?.name || "Equipe 2",
+          team_a_logo: teamA.logo || null,
+          team_b_logo: teamB?.logo || null,
+          team_a_members: payload as unknown as Json,
+          team_b_members: (teamB?.members || []) as unknown as Json,
+        })
+        .eq("id", campaign.id);
+      if (error) throw error;
+
       toast.success("Configurações salvas com sucesso!");
       setConfigOpen(false);
       fetchCampaign();
@@ -146,39 +190,45 @@ const SalesDuel = () => {
     }
   };
 
-  const addMember = (team: "A" | "B") => {
-    const newMember = { name: "", value: 0 };
-    if (team === "A") {
-      setTeamAMembers([...teamAMembers, newMember]);
-    } else {
-      setTeamBMembers([...teamBMembers, newMember]);
-    }
+  const addTeam = () => {
+    setTeams((current) => [...current, createTeam(current.length)]);
   };
 
-  const removeMember = (team: "A" | "B", index: number) => {
-    if (team === "A") {
-      setTeamAMembers(teamAMembers.filter((_, i) => i !== index));
-    } else {
-      setTeamBMembers(teamBMembers.filter((_, i) => i !== index));
-    }
+  const removeTeam = (teamId: string) => {
+    setTeams((current) => current.length <= 2 ? current : current.filter((team) => team.id !== teamId));
   };
 
-  const updateMember = (team: "A" | "B", index: number, field: keyof Member, value: string | number) => {
-    if (team === "A") {
-      const updated = [...teamAMembers];
-      updated[index] = { ...updated[index], [field]: value };
-      setTeamAMembers(updated);
-    } else {
-      const updated = [...teamBMembers];
-      updated[index] = { ...updated[index], [field]: value };
-      setTeamBMembers(updated);
-    }
+  const updateTeam = (teamId: string, field: keyof Omit<Team, 'members'>, value: string) => {
+    setTeams((current) => current.map((team) => (
+      team.id === teamId ? { ...team, [field]: value } : team
+    )));
+  };
+
+  const addMember = (teamId: string) => {
+    setTeams((current) => current.map((team) => (
+      team.id === teamId ? { ...team, members: [...team.members, { name: "", value: 0 }] } : team
+    )));
+  };
+
+  const removeMember = (teamId: string, index: number) => {
+    setTeams((current) => current.map((team) => (
+      team.id === teamId ? { ...team, members: team.members.filter((_, memberIndex) => memberIndex !== index) } : team
+    )));
+  };
+
+  const updateMember = (teamId: string, index: number, field: keyof Member, value: string | number) => {
+    setTeams((current) => current.map((team) => {
+      if (team.id !== teamId) return team;
+      const updatedMembers = [...team.members];
+      updatedMembers[index] = { ...updatedMembers[index], [field]: value };
+      return { ...team, members: updatedMembers };
+    }));
   };
 
   const handleImportExcel = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!isAdmin) {
+    if (!isDuelAdmin) {
       toast.error("Apenas administradores podem importar dados");
       return;
     }
@@ -193,63 +243,53 @@ const SalesDuel = () => {
         if (row && row[3]) {
           const fullName = String(row[3]).trim();
           const nameParts = fullName.split(' - ');
-          let extractedName = nameParts.length > 1 ? nameParts[1].trim().toUpperCase() : fullName.toUpperCase();
+          const extractedName = nameParts.length > 1 ? nameParts[1].trim().toUpperCase() : fullName.toUpperCase();
           const value = row[49] ? parseFloat(String(row[49]).replace(',', '.')) : 0;
           valoresImportados.set(extractedName, value);
         }
       }
-      const updatedTeamA = teamAMembers.map(member => {
-        const nomeMembro = member.name.toUpperCase().trim();
-        let valorEncontrado = valoresImportados.get(nomeMembro);
-        if (valorEncontrado === undefined) {
-          for (const [nomeExcel, valor] of valoresImportados.entries()) {
-            const palavrasMembro = nomeMembro.split(' ').filter(p => p.length > 2);
-            const palavrasExcel = nomeExcel.split(' ').filter(p => p.length > 2);
-            const hasMatch = palavrasMembro.some(pm =>
-              palavrasExcel.some(pe => pe.includes(pm) || pm.includes(pe))
-            );
-            if (hasMatch) {
-              valorEncontrado = valor;
-              console.log(`Match encontrado: "${nomeMembro}" <-> "${nomeExcel}" = R$ ${valor}`);
-              break;
+
+      const updatedTeams = teams.map((team) => ({
+        ...team,
+        members: team.members.map((member) => {
+          const memberName = member.name.toUpperCase().trim();
+          let foundValue = valoresImportados.get(memberName);
+
+          if (foundValue === undefined) {
+            for (const [excelName, importedValue] of valoresImportados.entries()) {
+              const memberWords = memberName.split(' ').filter((word) => word.length > 2);
+              const excelWords = excelName.split(' ').filter((word) => word.length > 2);
+              const hasMatch = memberWords.some((memberWord) =>
+                excelWords.some((excelWord) => excelWord.includes(memberWord) || memberWord.includes(excelWord))
+              );
+
+              if (hasMatch) {
+                foundValue = importedValue;
+                break;
+              }
             }
           }
-        }
-        return {
-          ...member,
-          value: valorEncontrado !== undefined ? valorEncontrado : member.value
-        };
-      });
-      const updatedTeamB = teamBMembers.map(member => {
-        const nomeMembro = member.name.toUpperCase().trim();
-        let valorEncontrado = valoresImportados.get(nomeMembro);
-        if (valorEncontrado === undefined) {
-          for (const [nomeExcel, valor] of valoresImportados.entries()) {
-            const palavrasMembro = nomeMembro.split(' ').filter(p => p.length > 2);
-            const palavrasExcel = nomeExcel.split(' ').filter(p => p.length > 2);
-            const hasMatch = palavrasMembro.some(pm =>
-              palavrasExcel.some(pe => pe.includes(pm) || pm.includes(pe))
-            );
-            if (hasMatch) {
-              valorEncontrado = valor;
-              console.log(`Match encontrado: "${nomeMembro}" <-> "${nomeExcel}" = R$ ${valor}`);
-              break;
-            }
-          }
-        }
-        return {
-          ...member,
-          value: valorEncontrado !== undefined ? valorEncontrado : member.value
-        };
-      });
-      setTeamAMembers(updatedTeamA);
-      setTeamBMembers(updatedTeamB);
+
+          return {
+            ...member,
+            value: foundValue !== undefined ? foundValue : member.value,
+          };
+        }),
+      }));
+
+      setTeams(updatedTeams);
+
       if (campaign) {
+        const [teamA, teamB] = updatedTeams;
         const { error } = await supabase
           .from("sales_duel")
           .update({
-            team_a_members: updatedTeamA as unknown as any,
-            team_b_members: updatedTeamB as unknown as any,
+            team_a_name: teamA?.name || "Equipe 1",
+            team_b_name: teamB?.name || "Equipe 2",
+            team_a_logo: teamA?.logo || null,
+            team_b_logo: teamB?.logo || null,
+            team_a_members: { teams: updatedTeams } as unknown as Json,
+            team_b_members: (teamB?.members || []) as unknown as Json,
           })
           .eq("id", campaign.id);
         if (error) throw error;
@@ -295,13 +335,12 @@ const SalesDuel = () => {
     }
   };
 
-  // Função para calcular dias úteis (segunda a sábado) restantes no mês atual, incluindo o dia atual
   const getBusinessDaysInMonth = () => {
     const today = new Date();
-    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Último dia do mês
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     let businessDays = 0;
     for (let d = new Date(today); d <= endOfMonth; d.setDate(d.getDate() + 1)) {
-      const isWeekday = d.getDay() >= 1 && d.getDay() <= 6; // Segunda a sábado
+      const isWeekday = d.getDay() >= 1 && d.getDay() <= 6;
       if (isWeekday) {
         businessDays++;
       }
@@ -325,21 +364,21 @@ const SalesDuel = () => {
     );
   }
 
-  const teamATotal = campaign.team_a_members.reduce((sum, m) => sum + m.value, 0);
-  const teamBTotal = campaign.team_b_members.reduce((sum, m) => sum + m.value, 0);
-  const totalSales = teamATotal + teamBTotal;
+  const teamsWithTotals = campaign.teams.map((team) => ({
+    ...team,
+    total: team.members.reduce((sum, member) => sum + member.value, 0),
+    sortedMembers: [...team.members].sort((a, b) => b.value - a.value),
+  }));
+  const totalSales = teamsWithTotals.reduce((sum, team) => sum + team.total, 0);
   const progress = Math.min((totalSales / campaign.goal_value) * 100, 100);
   const isActive = totalSales >= campaign.goal_value;
-  const isTeamAWinning = teamATotal > teamBTotal;
-  const teamDifference = Math.abs(teamATotal - teamBTotal);
-  const sortedTeamA = [...campaign.team_a_members].sort((a, b) => b.value - a.value);
-  const sortedTeamB = [...campaign.team_b_members].sort((a, b) => b.value - a.value);
-  const allMembers = [
-    ...campaign.team_a_members.map(m => ({ ...m, team: campaign.team_a_name })),
-    ...campaign.team_b_members.map(m => ({ ...m, team: campaign.team_b_name }))
-  ].sort((a, b) => b.value - a.value);
+  const leader = [...teamsWithTotals].sort((a, b) => b.total - a.total)[0];
+  const secondPlace = [...teamsWithTotals].sort((a, b) => b.total - a.total)[1];
+  const teamDifference = leader && secondPlace ? Math.abs(leader.total - secondPlace.total) : 0;
+  const allMembers = teamsWithTotals
+    .flatMap((team) => team.members.map((member) => ({ ...member, team: team.name })))
+    .sort((a, b) => b.value - a.value);
 
-  // Calcular valor por dia
   const remainingValue = Math.max(0, campaign.goal_value - totalSales);
   const businessDays = getBusinessDaysInMonth();
   const valuePerDay = businessDays > 0 ? remainingValue / businessDays : 0;
@@ -347,28 +386,15 @@ const SalesDuel = () => {
   return (
     <div ref={printAreaRef} className="min-h-screen bg-gradient-to-br from-background via-background to-primary/10">
       <Helmet>
-        <title>Sparta vs Águia Velozes</title>
-        <meta name="description" content="Acompanhe o duelo de vendas entre Sparta e Águia Velozes! Veja quem está liderando a competição!" />
-        <meta property="og:title" content="Sparta vs Águia Velozes" />
-        <meta property="og:description" content="Acompanhe o duelo de vendas entre Sparta e Águia Velozes! Veja quem está liderando a competição!" />
-        <meta property="og:image" content="https://gazinassisbrasil.shop/vs.jpg" />
-        <meta property="og:image:alt" content="Preview do Duelo de Vendas" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:url" content="https://gazinassisbrasil.shop/duelo" />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Sparta vs Águia Velozes" />
-        <meta name="twitter:description" content="Acompanhe o duelo de vendas entre Sparta e Águia Velozes! Veja quem está liderando a competição!" />
-        <meta name="twitter:image" content="https://gazinassisbrasil.shop/vs.jpg" />
+        <title>{campaign.campaign_name}</title>
       </Helmet>
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center gap-2">
           <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
             {campaign.campaign_name}
           </h1>
-          {isAdmin && (
-            <div className={`flex gap-2 ${isPrinting ? "hidden" : ""}`}>
+          {isDuelAdmin && (
+            <div className={`flex gap-2 flex-wrap justify-end ${isPrinting ? "hidden" : ""}`}>
               <Dialog open={importOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -383,17 +409,10 @@ const SalesDuel = () => {
                   <div className="space-y-4">
                     <p className="text-sm text-muted-foreground">
                       Selecione a planilha Excel com os dados dos vendedores.
-                      <br />
-                      • Nomes devem estar na coluna D (D2:D11)
-                      <br />
-                      • Valores devem estar na coluna AX (AX2:AX11)
+                      <br />• Nomes devem estar na coluna D (D2:D11)
+                      <br />• Valores devem estar na coluna AX (AX2:AX11)
                     </p>
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleImportExcel}
-                    />
+                    <Input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleImportExcel} />
                   </div>
                 </DialogContent>
               </Dialog>
@@ -404,12 +423,12 @@ const SalesDuel = () => {
                     Configuração
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Configuração da Campanha</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
                       <div>
                         <Label>Nome da Campanha</Label>
                         <Input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} />
@@ -419,137 +438,89 @@ const SalesDuel = () => {
                         <Input type="number" value={goalValue} onChange={(e) => setGoalValue(Number(e.target.value))} />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Nome da Equipe A</Label>
-                          <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
-                        </div>
-                        <div>
-                          <Label>Logo da Equipe A</Label>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleLogoUpload(file, "A");
-                            }}
-                          />
-                          {teamALogo && (
-                            <div className="mt-2">
-                              <img src={teamALogo} alt="Logo Equipe A" className="h-16 object-contain" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <Label>Nome da Equipe B</Label>
-                          <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
-                        </div>
-                        <div>
-                          <Label>Logo da Equipe B</Label>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleLogoUpload(file, "B");
-                            }}
-                          />
-                          {teamBLogo && (
-                            <div className="mt-2">
-                              <img src={teamBLogo} alt="Logo Equipe B" className="h-16 object-contain" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+
+                    <div className="flex justify-between items-center">
                       <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <Label>Integrantes da Equipe A</Label>
-                          <Button type="button" size="sm" onClick={() => addMember("A")}>
-                            <Plus className="h-4 w-4 mr-1" />
-                            Adicionar
-                          </Button>
-                        </div>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {teamAMembers.map((member, idx) => (
-                            <div key={idx} className="flex gap-2 items-end">
-                              <div className="flex-1">
-                                <Label className="text-xs">Nome</Label>
-                                <Input
-                                  value={member.name}
-                                  onChange={(e) => updateMember("A", idx, "name", e.target.value)}
-                                  placeholder="Nome do vendedor"
-                                />
+                        <h3 className="font-semibold">Equipes participantes</h3>
+                        <p className="text-sm text-muted-foreground">Adicione quantas equipes precisar.</p>
+                      </div>
+                      <Button type="button" onClick={addTeam}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Adicionar equipe
+                      </Button>
+                    </div>
+
+                    <div className="space-y-6">
+                      {teams.map((team, teamIndex) => (
+                        <div key={team.id} className="border rounded-lg p-4 space-y-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="grid md:grid-cols-2 gap-4 flex-1">
+                              <div>
+                                <Label>Nome da Equipe</Label>
+                                <Input value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} />
                               </div>
-                              <div className="w-32">
-                                <Label className="text-xs">Valor (R$)</Label>
+                              <div>
+                                <Label>Logo da Equipe</Label>
                                 <Input
-                                  type="number"
-                                  value={member.value}
-                                  onChange={(e) => updateMember("A", idx, "value", Number(e.target.value))}
-                                  placeholder="0"
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleLogoUpload(file, team.id);
+                                  }}
                                 />
+                                {team.logo && (
+                                  <div className="mt-2">
+                                    <img src={team.logo} alt={team.name} className="h-16 object-contain" />
+                                  </div>
+                                )}
                               </div>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => removeMember("A", idx)}
-                              >
-                                <Trash2 className="h-4 w-4" />
+                            </div>
+                            <Button type="button" variant="destructive" size="icon" disabled={teams.length <= 2} onClick={() => removeTeam(team.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <Label>Integrantes da {team.name || `Equipe ${teamIndex + 1}`}</Label>
+                              <Button type="button" size="sm" onClick={() => addMember(team.id)}>
+                                <Plus className="h-4 w-4 mr-1" />
+                                Adicionar
                               </Button>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between items-center mb-2">
-                          <Label>Integrantes da Equipe B</Label>
-                          <Button type="button" size="sm" onClick={() => addMember("B")}>
-                            <Plus className="h-4 w-4 mr-1" />
-                            Adicionar
-                          </Button>
-                        </div>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {teamBMembers.map((member, idx) => (
-                            <div key={idx} className="flex gap-2 items-end">
-                              <div className="flex-1">
-                                <Label className="text-xs">Nome</Label>
-                                <Input
-                                  value={member.name}
-                                  onChange={(e) => updateMember("B", idx, "name", e.target.value)}
-                                  placeholder="Nome do vendedor"
-                                />
-                              </div>
-                              <div className="w-32">
-                                <Label className="text-xs">Valor (R$)</Label>
-                                <Input
-                                  type="number"
-                                  value={member.value}
-                                  onChange={(e) => updateMember("B", idx, "value", Number(e.target.value))}
-                                  placeholder="0"
-                                />
-                              </div>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => removeMember("B", idx)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                              {team.members.map((member, memberIndex) => (
+                                <div key={`${team.id}-${memberIndex}`} className="flex gap-2 items-end">
+                                  <div className="flex-1">
+                                    <Label className="text-xs">Nome</Label>
+                                    <Input
+                                      value={member.name}
+                                      onChange={(e) => updateMember(team.id, memberIndex, 'name', e.target.value)}
+                                      placeholder="Nome do vendedor"
+                                    />
+                                  </div>
+                                  <div className="w-32">
+                                    <Label className="text-xs">Valor (R$)</Label>
+                                    <Input
+                                      type="number"
+                                      value={member.value}
+                                      onChange={(e) => updateMember(team.id, memberIndex, 'value', Number(e.target.value))}
+                                      placeholder="0"
+                                    />
+                                  </div>
+                                  <Button type="button" variant="destructive" size="icon" onClick={() => removeMember(team.id, memberIndex)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                    <Button onClick={handleSave} className="w-full">
-                      Salvar Configurações
-                    </Button>
+
+                    <Button onClick={handleSave} className="w-full">Salvar Configurações</Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -569,14 +540,11 @@ const SalesDuel = () => {
       </header>
       <main className="container mx-auto px-4 py-8">
         <section className="mb-8">
-          <img src="/vs2.jpg" alt="Versus Banner" className="w-full h-auto mb-6" />
           <div className="bg-card rounded-lg p-6 shadow-lg border">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
               <div>
                 <h2 className="text-xl font-semibold mb-3">Meta da Campanha</h2>
-                <p className="text-5xl font-bold text-primary">
-                  R$ {campaign.goal_value.toLocaleString("pt-BR")}
-                </p>
+                <p className="text-5xl font-bold text-primary">R$ {campaign.goal_value.toLocaleString("pt-BR")}</p>
               </div>
               <div className={`text-lg font-semibold px-4 py-2 rounded-full ${
                 isActive ? "bg-green-500/20 text-green-600" : "bg-red-500/20 text-red-600"
@@ -586,17 +554,13 @@ const SalesDuel = () => {
             </div>
             <div className="space-y-3">
               <div className="flex justify-center">
-                <p className="text-2xl font-bold text-blue-600">
-                  {progress.toFixed(1)}%
-                </p>
+                <p className="text-2xl font-bold text-blue-600">{progress.toFixed(1)}%</p>
               </div>
               <Progress value={progress} className="h-6" />
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-4 flex-wrap">
                 <div>
                   <p className="text-sm text-muted-foreground">Valor Atual</p>
-                  <p className="text-3xl font-bold">
-                    R$ {totalSales.toLocaleString("pt-BR")}
-                  </p>
+                  <p className="text-3xl font-bold">R$ {totalSales.toLocaleString("pt-BR")}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Faltam</p>
@@ -613,95 +577,53 @@ const SalesDuel = () => {
         </section>
         <section className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Equipes</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
-              isTeamAWinning ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
-            }`}>
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {campaign.team_a_logo && (
-                    <img src={campaign.team_a_logo} alt={campaign.team_a_name} className="h-20 w-20 object-contain" />
-                  )}
-                  <h3 className="text-xl font-bold">
-                    {campaign.team_a_name}
-                  </h3>
-                </div>
-                {isTeamAWinning && <span className="text-2xl">🏆</span>}
-              </div>
-              <div className="space-y-2 mb-4">
-                {sortedTeamA.map((member, idx) => {
-                  const membersWithSales = sortedTeamA.filter(m => m.value > 0);
-                  const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
-                  const hasRanking = member.value > 0;
-                  return (
-                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm w-6">
-                          {hasRanking ? `${position + 1}º` : "-"}
-                        </span>
-                        <span>{member.name}</span>
-                      </div>
-                      <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {teamsWithTotals.map((team) => {
+              const isLeader = leader?.id === team.id && team.total > 0;
+              return (
+                <div key={team.id} className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
+                  isLeader ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
+                }`}>
+                  <div className="mb-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {team.logo && <img src={team.logo} alt={team.name} className="h-20 w-20 object-contain" />}
+                      <h3 className="text-xl font-bold">{team.name}</h3>
                     </div>
-                  );
-                })}
-              </div>
-              <div className="pt-4 border-t">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>Total:</span>
-                  <span className="text-primary">R$ {teamATotal.toLocaleString("pt-BR")}</span>
-                </div>
-              </div>
-            </div>
-            <div className={`bg-card rounded-lg p-6 shadow-lg border-2 transition-all ${
-              !isTeamAWinning && teamBTotal > 0 ? "border-yellow-500 shadow-yellow-500/50 ring-2 ring-yellow-500/20" : "border-border"
-            }`}>
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {campaign.team_b_logo && (
-                    <img src={campaign.team_b_logo} alt={campaign.team_b_name} className="h-20 w-20 object-contain" />
-                  )}
-                  <h3 className="text-xl font-bold">
-                    {campaign.team_b_name}
-                  </h3>
-                </div>
-                {!isTeamAWinning && teamBTotal > 0 && <span className="text-2xl">🏆</span>}
-              </div>
-              <div className="space-y-2 mb-4">
-                {sortedTeamB.map((member, idx) => {
-                  const membersWithSales = sortedTeamB.filter(m => m.value > 0);
-                  const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
-                  const hasRanking = member.value > 0;
-                  return (
-                    <div key={idx} className="flex justify-between items-center p-2 bg-background rounded">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm w-6">
-                          {hasRanking ? `${position + 1}º` : "-"}
-                        </span>
-                        <span>{member.name}</span>
-                      </div>
-                      <span className="font-semibold">R$ {member.value.toLocaleString("pt-BR")}</span>
+                    {isLeader && <span className="text-2xl">🏆</span>}
+                  </div>
+                  <div className="space-y-2 mb-4">
+                    {team.sortedMembers.map((member, idx) => {
+                      const membersWithSales = team.sortedMembers.filter((sortedMember) => sortedMember.value > 0);
+                      const position = membersWithSales.findIndex((sortedMember) => sortedMember.name === member.name && sortedMember.value === member.value);
+                      const hasRanking = member.value > 0;
+                      return (
+                        <div key={idx} className="flex justify-between items-center p-2 bg-background rounded gap-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-bold text-sm w-6">{hasRanking ? `${position + 1}º` : "-"}</span>
+                            <span className="truncate">{member.name}</span>
+                          </div>
+                          <span className="font-semibold whitespace-nowrap">R$ {member.value.toLocaleString("pt-BR")}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center text-lg font-bold">
+                      <span>Total:</span>
+                      <span className="text-primary">R$ {team.total.toLocaleString("pt-BR")}</span>
                     </div>
-                  );
-                })}
-              </div>
-              <div className="pt-4 border-t">
-                <div className="flex justify-between items-center text-lg font-bold">
-                  <span>Total:</span>
-                  <span className="text-primary">R$ {teamBTotal.toLocaleString("pt-BR")}</span>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </section>
         <section className="mb-8">
           <div className="bg-card rounded-lg p-6 shadow-lg border text-center">
-            <h3 className="text-lg font-semibold mb-2">Diferença entre Equipes</h3>
-            <p className="text-3xl font-bold text-primary">
-              R$ {teamDifference.toLocaleString("pt-BR")}
-            </p>
+            <h3 className="text-lg font-semibold mb-2">Diferença entre equipes líderes</h3>
+            <p className="text-3xl font-bold text-primary">R$ {teamDifference.toLocaleString("pt-BR")}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {isTeamAWinning ? campaign.team_a_name : campaign.team_b_name} está na frente
+              {leader ? `${leader.name} está na frente` : 'Sem líder definido'}
             </p>
           </div>
         </section>
@@ -710,35 +632,29 @@ const SalesDuel = () => {
           <div className="bg-card rounded-lg p-6 shadow-lg border">
             <div className="space-y-3">
               {allMembers.map((member, idx) => {
-                const membersWithSales = allMembers.filter(m => m.value > 0);
-                const position = membersWithSales.findIndex(m => m.name === member.name && m.value === member.value);
+                const membersWithSales = allMembers.filter((rankedMember) => rankedMember.value > 0);
+                const position = membersWithSales.findIndex((rankedMember) => rankedMember.name === member.name && rankedMember.value === member.value);
                 const hasRanking = member.value > 0;
                 return (
                   <div
                     key={idx}
-                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all gap-4 ${
                       position === 0 ? "bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 border border-yellow-500/50" :
                       position === 1 ? "bg-gradient-to-r from-gray-400/20 to-gray-500/20 border border-gray-400/50" :
                       position === 2 ? "bg-gradient-to-r from-orange-600/20 to-orange-700/20 border border-orange-600/50" :
                       "bg-background"
                     }`}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
                       <span className="text-2xl font-bold w-8">
-                        {hasRanking ? (
-                          position === 0 ? "🥇" : position === 1 ? "🥈" : position === 2 ? "🥉" : `${position + 1}º`
-                        ) : (
-                          "-"
-                        )}
+                        {hasRanking ? (position === 0 ? "🥇" : position === 1 ? "🥈" : position === 2 ? "🥉" : `${position + 1}º`) : "-"}
                       </span>
-                      <div>
-                        <p className="font-semibold">{member.name}</p>
-                        <p className="text-sm text-muted-foreground">{member.team}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">{member.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{member.team}</p>
                       </div>
                     </div>
-                    <span className="text-xl font-bold text-primary">
-                      R$ {member.value.toLocaleString("pt-BR")}
-                    </span>
+                    <span className="text-xl font-bold text-primary whitespace-nowrap">R$ {member.value.toLocaleString("pt-BR")}</span>
                   </div>
                 );
               })}
