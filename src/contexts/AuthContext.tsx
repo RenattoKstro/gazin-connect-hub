@@ -45,6 +45,19 @@ const getAccessLevel = async (sessionUser: User | null): Promise<AccessLevel> =>
   return profile?.role === 'admin' ? 'full_admin' : 'user';
 };
 
+const ensureDuelAdminProfileAccess = async (sessionUser: User | null) => {
+  if (!sessionUser || sessionUser.email !== DUEL_ADMIN_EMAIL) return;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: 'admin' })
+    .eq('user_id', sessionUser.id);
+
+  if (error) {
+    console.error('Error granting duel admin profile access:', error);
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -59,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (nextSession?.user) {
           setTimeout(async () => {
+            await ensureDuelAdminProfileAccess(nextSession.user);
             const nextAccessLevel = await getAccessLevel(nextSession.user);
             setAccessLevel(nextAccessLevel);
             setIsLoading(false);
@@ -74,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       if (existingSession?.user) {
+        await ensureDuelAdminProfileAccess(existingSession.user);
         const nextAccessLevel = await getAccessLevel(existingSession.user);
         setAccessLevel(nextAccessLevel);
       }
@@ -112,6 +127,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await ensureDuelAdminExists();
         const retry = await supabase.auth.signInWithPassword({ email, password });
         error = retry.error;
+
+        if (!retry.error && retry.data.user) {
+          await ensureDuelAdminProfileAccess(retry.data.user);
+        }
       } catch (signupError) {
         error = signupError;
       }
