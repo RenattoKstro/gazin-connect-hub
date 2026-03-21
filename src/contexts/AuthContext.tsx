@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 const MAIN_ADMIN_EMAIL = 'admin@filial359.com';
 const DUEL_ADMIN_EMAIL = 'admin@filial195.com';
 const DUEL_ADMIN_PASSWORD = 'admin195';
-const DUEL_ADMIN_SESSION_KEY = 'duel-admin-session';
 
 type AccessLevel = 'guest' | 'user' | 'duel_admin' | 'full_admin';
 
@@ -31,33 +30,6 @@ export const useAuth = () => {
   return context;
 };
 
-const buildLocalDuelAdminUser = (): User => ({
-  id: 'local-duel-admin',
-  app_metadata: {},
-  user_metadata: {},
-  aud: 'authenticated',
-  created_at: new Date().toISOString(),
-  email: DUEL_ADMIN_EMAIL,
-}) as User;
-
-const buildLocalDuelAdminSession = (): Session => ({
-  access_token: 'local-duel-admin-token',
-  refresh_token: 'local-duel-admin-refresh',
-  expires_in: 60 * 60 * 24 * 365,
-  token_type: 'bearer',
-  user: buildLocalDuelAdminUser(),
-}) as Session;
-
-const persistLocalDuelAdminSession = () => {
-  localStorage.setItem(DUEL_ADMIN_SESSION_KEY, 'true');
-};
-
-const clearLocalDuelAdminSession = () => {
-  localStorage.removeItem(DUEL_ADMIN_SESSION_KEY);
-};
-
-const hasLocalDuelAdminSession = () => localStorage.getItem(DUEL_ADMIN_SESSION_KEY) === 'true';
-
 const getAccessLevel = async (sessionUser: User | null): Promise<AccessLevel> => {
   if (!sessionUser) return 'guest';
 
@@ -71,6 +43,19 @@ const getAccessLevel = async (sessionUser: User | null): Promise<AccessLevel> =>
     .maybeSingle();
 
   return profile?.role === 'admin' ? 'full_admin' : 'user';
+};
+
+const ensureDuelAdminProfileAccess = async (sessionUser: User | null) => {
+  if (!sessionUser || sessionUser.email !== DUEL_ADMIN_EMAIL) return;
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: 'admin' })
+    .eq('user_id', sessionUser.id);
+
+  if (error) {
+    console.error('Error granting duel admin profile access:', error);
+  }
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -92,65 +77,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, nextSession) => {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+
         if (nextSession?.user) {
-          clearLocalDuelAdminSession();
-          setSession(nextSession);
-          setUser(nextSession.user);
           setTimeout(async () => {
+            await ensureDuelAdminProfileAccess(nextSession.user);
             const nextAccessLevel = await getAccessLevel(nextSession.user);
             setAccessLevel(nextAccessLevel);
             setIsLoading(false);
           }, 0);
-          return;
+        } else {
+          setAccessLevel('guest');
+          setIsLoading(false);
         }
-
-        if (hasLocalDuelAdminSession()) {
-          activateLocalDuelAdminSession();
-          return;
-        }
-
-        setSession(null);
-        setUser(null);
-        setAccessLevel('guest');
-        setIsLoading(false);
       }
     );
 
     supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
       if (existingSession?.user) {
-        clearLocalDuelAdminSession();
-        setSession(existingSession);
-        setUser(existingSession.user);
+        await ensureDuelAdminProfileAccess(existingSession.user);
         const nextAccessLevel = await getAccessLevel(existingSession.user);
         setAccessLevel(nextAccessLevel);
-        setIsLoading(false);
-        return;
       }
-
-      if (hasLocalDuelAdminSession()) {
-        activateLocalDuelAdminSession();
-        return;
-      }
-
-      setSession(null);
-      setUser(null);
-      setAccessLevel('guest');
       setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    if (email === DUEL_ADMIN_EMAIL && password === DUEL_ADMIN_PASSWORD) {
-      activateLocalDuelAdminSession();
-      return { error: null };
-    }
+  const ensureDuelAdminExists = async () => {
+    const { error } = await supabase.auth.signUp({
+      email: DUEL_ADMIN_EMAIL,
+      password: DUEL_ADMIN_PASSWORD,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+      },
+    });
 
-    const { error } = await supabase.auth.signInWithPassword({
+    if (
+      error &&
+      !error.message.toLowerCase().includes('already registered') &&
+      !error.message.toLowerCase().includes('already been registered')
+    ) {
+      throw error;
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    let { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    if (error && email === DUEL_ADMIN_EMAIL && password === DUEL_ADMIN_PASSWORD) {
+      try {
+        await ensureDuelAdminExists();
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        error = retry.error;
+
+        if (!retry.error && retry.data.user) {
+          await ensureDuelAdminProfileAccess(retry.data.user);
+        }
+      } catch (signupError) {
+        error = signupError;
+      }
+    }
 
     return { error };
   };
