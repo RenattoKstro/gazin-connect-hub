@@ -64,6 +64,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [accessLevel, setAccessLevel] = useState<AccessLevel>('guest');
   const [isLoading, setIsLoading] = useState(true);
 
+  const activateLocalDuelAdminSession = () => {
+    const localUser = buildLocalDuelAdminUser();
+    const localSession = buildLocalDuelAdminSession();
+    persistLocalDuelAdminSession();
+    setUser(localUser);
+    setSession(localSession);
+    setAccessLevel('duel_admin');
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, nextSession) => {
