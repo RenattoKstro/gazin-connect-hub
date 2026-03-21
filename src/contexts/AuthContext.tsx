@@ -163,19 +163,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    clearLocalDuelAdminSession();
+    const clearAuthState = () => {
+      setUser(null);
+      setSession(null);
+      setAccessLevel('guest');
 
-    if (accessLevel === 'duel_admin' && user?.email === DUEL_ADMIN_EMAIL) {
-      window.location.href = '/';
-      return;
-    }
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith('sb-'))
+        .forEach((key) => localStorage.removeItem(key));
+    };
 
     try {
-      await supabase.auth.signOut();
-      window.location.href = '/';
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error('Error signing out:', error);
-      window.location.href = '/';
+    } finally {
+      clearAuthState();
+      window.location.replace('/');
     }
   };
 
