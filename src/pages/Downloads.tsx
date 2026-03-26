@@ -204,8 +204,7 @@ const Downloads = () => {
       });
     }
   };
-
-
+  const resetForm = () => {
     setFormData({
       name: "",
       file_type: "",
