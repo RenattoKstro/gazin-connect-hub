@@ -23,7 +23,7 @@ interface DownloadFile {
 }
 
 const Downloads = () => {
-  const { isAdmin, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const { toast } = useToast();
   const [downloads, setDownloads] = useState<DownloadFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
