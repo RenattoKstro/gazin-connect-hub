@@ -69,8 +69,19 @@ const Downloads = () => {
       case "doc":
       case "docx":
         return <FileText className="w-12 h-12 text-blue-500" />;
+      case "xls":
+      case "xlsx":
+        return <FileText className="w-12 h-12 text-green-600" />;
+      case "ppt":
+      case "pptx":
+        return <FileText className="w-12 h-12 text-orange-500" />;
       case "apk":
+      case "exe":
         return <Smartphone className="w-12 h-12 text-green-500" />;
+      case "zip":
+      case "rar":
+        return <FileIcon className="w-12 h-12 text-yellow-600" />;
+      case "svg":
       case "jpg":
       case "jpeg":
       case "png":
@@ -285,7 +296,15 @@ const Downloads = () => {
                         <SelectItem value="pdf">PDF</SelectItem>
                         <SelectItem value="doc">DOC</SelectItem>
                         <SelectItem value="docx">DOCX</SelectItem>
+                        <SelectItem value="xls">XLS</SelectItem>
+                        <SelectItem value="xlsx">XLSX</SelectItem>
+                        <SelectItem value="ppt">PPT</SelectItem>
+                        <SelectItem value="pptx">PPTX</SelectItem>
+                        <SelectItem value="zip">ZIP</SelectItem>
+                        <SelectItem value="rar">RAR</SelectItem>
+                        <SelectItem value="exe">EXE</SelectItem>
                         <SelectItem value="apk">APK</SelectItem>
+                        <SelectItem value="svg">SVG</SelectItem>
                         <SelectItem value="jpg">JPG</SelectItem>
                         <SelectItem value="png">PNG</SelectItem>
                         <SelectItem value="webp">WEBP</SelectItem>
@@ -299,7 +318,7 @@ const Downloads = () => {
                       id="file"
                       type="file"
                       onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                      accept=".pdf,.doc,.docx,.apk,.jpg,.jpeg,.png,.webp"
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.exe,.apk,.svg,.jpg,.jpeg,.png,.webp"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Para arquivos maiores de 50MB, use o link externo abaixo
