@@ -47,6 +47,7 @@ const Downloads = () => {
     const { data, error } = await supabase
       .from("downloads")
       .select("*")
+      .order("pinned", { ascending: false })
       .order("created_at", { ascending: false });
 
     if (error) {
