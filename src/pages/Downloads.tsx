@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { FileText, Download, Trash2, Plus, Image, FileIcon, Smartphone, ExternalLink, LogOut, Home } from "lucide-react";
+import { FileText, Download, Trash2, Plus, Image, FileIcon, Smartphone, ExternalLink, LogOut, Home, Pin, PinOff } from "lucide-react";
 import gazinLogo from "@/assets/gazin-logo-new.png";
 
 interface DownloadFile {

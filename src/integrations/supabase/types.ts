@@ -68,6 +68,7 @@ export type Database = {
           file_url: string | null
           id: string
           name: string
+          pinned: boolean
           updated_at: string
         }
         Insert: {
@@ -78,6 +79,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           name: string
+          pinned?: boolean
           updated_at?: string
         }
         Update: {
@@ -88,6 +90,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           name?: string
+          pinned?: boolean
           updated_at?: string
         }
         Relationships: []
