@@ -338,8 +338,13 @@ const Downloads = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {downloads.map((download) => (
-              <Card key={download.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
+              <Card key={download.id} className={`hover:shadow-lg transition-shadow ${download.pinned ? 'ring-2 ring-primary/50' : ''}`}>
+                <CardHeader className="relative">
+                  {download.pinned && (
+                    <div className="absolute top-2 right-2">
+                      <Pin className="w-4 h-4 text-primary" />
+                    </div>
+                  )}
                   <div className="flex justify-center mb-4">
                     {getFileIcon(download.file_type)}
                   </div>
@@ -362,14 +367,24 @@ const Downloads = () => {
                   </Button>
 
                   {isAdmin && (
-                    <Button
-                      variant="destructive"
-                      className="w-full"
-                      onClick={() => handleDelete(download.id, download.file_url)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remover
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => handleTogglePin(download.id, download.pinned)}
+                      >
+                        {download.pinned ? <PinOff className="w-4 h-4 mr-2" /> : <Pin className="w-4 h-4 mr-2" />}
+                        {download.pinned ? "Desafixar" : "Fixar no Topo"}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => handleDelete(download.id, download.file_url)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remover
+                      </Button>
+                    </>
                   )}
                 </CardContent>
               </Card>
