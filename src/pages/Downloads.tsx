@@ -181,8 +181,31 @@ const Downloads = () => {
       });
     }
   };
+  const handleTogglePin = async (id: string, currentPinned: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("downloads")
+        .update({ pinned: !currentPinned })
+        .eq("id", id);
 
-  const resetForm = () => {
+      if (error) throw error;
+
+      toast({
+        title: currentPinned ? "Desafixado" : "Fixado",
+        description: currentPinned ? "Arquivo desafixado do topo" : "Arquivo fixado no topo",
+      });
+
+      fetchDownloads();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fixar/desafixar",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+
     setFormData({
       name: "",
       file_type: "",
