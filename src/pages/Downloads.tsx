@@ -205,18 +205,20 @@ const Downloads = () => {
               <img src={gazinLogo} alt="Gazin Logo" className="h-12" />
               <h1 className="text-2xl font-bold">Downloads</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" asChild>
-                <Link to="/">
-                  <Home className="w-4 h-4 mr-2" />
-                  Início
-                </Link>
-              </Button>
-              <Button variant="outline" onClick={signOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </Button>
-            </div>
+            {user && (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" asChild>
+                  <Link to="/">
+                    <Home className="w-4 h-4 mr-2" />
+                    Início
+                  </Link>
+                </Button>
+                <Button variant="outline" onClick={signOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </header>
