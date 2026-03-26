@@ -19,6 +19,7 @@ interface DownloadFile {
   file_url: string | null;
   external_link: string | null;
   file_size: number | null;
+  pinned: boolean;
   created_at: string;
 }
 
